@@ -40,17 +40,28 @@ router.get('/dashboard', wrap(async (req, res) => {
 /* ---------- รายการจอง ---------- */
 router.get('/bookings', wrap(async (req, res) => {
   const status = req.query.status || 'active';
-  const rows = await query(
-    `SELECT BookingID, BookingNo, CONVERT(char(16), BookingDate, 120) AS BookingDate, Status, TrackerStage,
-            TotalPrice, PaidAmount, PetName, Species, Breed, WeightKg, MedicalNotes,
-            CustomerName, Phone, RoomID, RoomNo,
-            CONVERT(char(10), CheckInDate, 23) AS CheckInDate, CONVERT(char(10), CheckOutDate, 23) AS CheckOutDate, Nights
-     FROM booking.vw_BookingSummary
-     WHERE (@st = 'all') OR (@st = 'active' AND Status IN ('Confirmed', 'CheckedIn')) OR Status = @st
-     ORDER BY CASE Status WHEN 'CheckedIn' THEN 0 WHEN 'Confirmed' THEN 1 ELSE 2 END,
-              ISNULL(CheckInDate, BookingDate), BookingID DESC`,
-    { st: [sql.VarChar(10), status] }
-  );
+  const [rows, grooming, extras] = await Promise.all([
+    query(
+      `SELECT BookingID, BookingNo, CONVERT(char(16), BookingDate, 120) AS BookingDate, Status, TrackerStage,
+              TotalPrice, PaidAmount, PetName, Species, Breed, WeightKg, MedicalNotes,
+              CustomerName, Phone, RoomID, RoomNo,
+              CONVERT(char(10), CheckInDate, 23) AS CheckInDate, CONVERT(char(10), CheckOutDate, 23) AS CheckOutDate, Nights
+       FROM booking.vw_BookingSummary
+       WHERE (@st = 'all') OR (@st = 'active' AND Status IN ('Confirmed', 'CheckedIn')) OR Status = @st
+       ORDER BY CASE Status WHEN 'CheckedIn' THEN 0 WHEN 'Confirmed' THEN 1 ELSE 2 END,
+                ISNULL(CheckInDate, BookingDate), BookingID DESC`,
+      { st: [sql.VarChar(10), status] }
+    ),
+    query(
+      `SELECT BookingGroomingID, BookingID, ServiceName, StaffName, CONVERT(char(16), StartTime, 120) AS StartTime, Status
+       FROM grooming.vw_GroomingSchedule ORDER BY StartTime`
+    ),
+    query(`SELECT BookingID, ExtraID, ExtraName, Unit, Qty, Status FROM booking.vw_BookingExtras ORDER BY ExtraID`),
+  ]);
+  for (const b of rows) {
+    b.grooming = grooming.filter((g) => g.BookingID === b.BookingID);
+    b.extras = extras.filter((x) => x.BookingID === b.BookingID);
+  }
   res.json(rows);
 }));
 
@@ -104,6 +115,14 @@ router.post('/rooms/:id/cleaned', wrap(async (req, res) => {
 router.post('/grooming/:id/status', wrap(async (req, res) => {
   await exec('booking.sp_UpdateGroomingStatus', {
     BookingGroomingID: id(req.params.id),
+    Status: [sql.VarChar(10), (req.body || {}).status],
+  });
+  res.json({ ok: true });
+}));
+router.post('/bookings/:id/extras/:extraId/status', wrap(async (req, res) => {
+  await exec('booking.sp_UpdateExtraStatus', {
+    BookingID: id(req.params.id),
+    ExtraID: id(req.params.extraId),
     Status: [sql.VarChar(10), (req.body || {}).status],
   });
   res.json({ ok: true });

@@ -125,7 +125,7 @@ router.post('/bookings', needLogin, wrap(async (req, res) => {
 /* ---------- การจองของฉัน + Status Tracker (booking.vw_BookingSummary) ---------- */
 router.get('/bookings', needLogin, wrap(async (req, res) => {
   const cid = [sql.Int, req.session.customer.id];
-  const [bookings, grooming] = await Promise.all([
+  const [bookings, grooming, extras] = await Promise.all([
     query(
       `SELECT BookingID, BookingNo, CONVERT(char(16), BookingDate, 120) AS BookingDate, Status, TotalPrice, PaidAmount,
               PetName, Species, RoomNo, CONVERT(char(10), CheckInDate, 23) AS CheckInDate,
@@ -137,8 +137,16 @@ router.get('/bookings', needLogin, wrap(async (req, res) => {
        FROM grooming.vw_GroomingSchedule g
        JOIN booking.vw_BookingSummary b ON b.BookingID = g.BookingID
        WHERE b.CustomerID = @cid ORDER BY g.StartTime`, { cid }),
+    query(
+      `SELECT x.BookingID, x.ExtraID, x.ExtraName, x.Unit, x.Qty, x.Status
+       FROM booking.vw_BookingExtras x
+       JOIN booking.vw_BookingSummary b ON b.BookingID = x.BookingID
+       WHERE b.CustomerID = @cid ORDER BY x.ExtraID`, { cid }),
   ]);
-  for (const bk of bookings) bk.grooming = grooming.filter((g) => g.BookingID === bk.BookingID);
+  for (const bk of bookings) {
+    bk.grooming = grooming.filter((g) => g.BookingID === bk.BookingID);
+    bk.extras = extras.filter((x) => x.BookingID === bk.BookingID);
+  }
   res.json(bookings);
 }));
 

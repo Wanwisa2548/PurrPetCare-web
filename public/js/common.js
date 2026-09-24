@@ -68,3 +68,71 @@ async function requireCustomer(active) {
   if (!me.customer) { location.href = 'index.html#login'; throw new Error('not logged in'); }
   return me.customer;
 }
+
+// ===== Status Tracker: สร้างขั้นตอนจากบริการที่ลูกค้าเลือกจริง (ใช้ทั้งหน้าลูกค้าและ Admin) =====
+const SERVICE_ICONS = [[/อาบน้ำ/, '🛁'], [/ตัดขน/, '✂️'], [/ตัดเล็บ/, '💅'], [/สปา/, '🧖'], [/เดินเล่น/, '🦮'], [/อาหาร/, '🍖'], [/ป้อนยา|ดูแล/, '💊']];
+const serviceIcon = (name) => (SERVICE_ICONS.find(([re]) => re.test(name)) || [null, '🐾'])[1];
+
+function trackerSteps(b) {
+  const inHouse = b.Status === 'CheckedIn', over = b.Status === 'Completed';
+  const grooming = (b.grooming || []).filter((g) => g.Status !== 'Cancelled');
+  const extras = b.extras || [];
+  const jobs = [
+    ...grooming.map((g) => ({ job: 'grooming', id: g.BookingGroomingID, label: g.ServiceName, status: g.Status, working: 'กำลัง' + g.ServiceName })),
+    ...extras.map((x) => ({ job: 'extra', id: x.ExtraID, label: x.ExtraName, status: x.Status, working: x.ExtraName + ' (กำลังทำ)' })),
+  ];
+
+  const steps = [{ type: 'checkin', icon: '📅', label: b.RoomNo ? 'รอเข้าพัก' : 'รอเข้ารับบริการ', state: b.Status === 'Confirmed' ? 'now' : 'done' }];
+  if (b.RoomNo) {
+    const moved = jobs.some((j) => j.status !== 'Waiting');
+    steps.push({ type: 'rest', icon: '🛏️', label: 'กำลังพักผ่อน', state: over || (inHouse && moved) ? 'done' : 'todo' });
+  }
+  for (const j of jobs) {
+    steps.push({ ...j, type: j.job, icon: serviceIcon(j.label),
+      label: j.status === 'InProgress' ? j.working : j.label,
+      state: over || j.status === 'Done' ? 'done' : j.status === 'InProgress' ? 'now' : 'todo' });
+  }
+  if (grooming.length) {
+    const allDone = grooming.every((g) => g.Status === 'Done');
+    steps.push({ type: 'ready', icon: '✨', label: 'หล่อพร้อมกลับบ้าน', state: over ? 'done' : inHouse && allDone ? 'now' : 'todo' });
+  }
+  steps.push({ type: 'checkout', icon: '🏠', label: 'กลับบ้านแล้ว', state: over ? 'now' : 'todo' });
+
+  // น้องอยู่ในร้านแต่ยังไม่มีขั้นไหนกำลังทำ -> ไฮไลต์ขั้นถัดไป
+  if (inHouse && !steps.some((s) => s.state === 'now')) steps.find((s) => s.state === 'todo').state = 'now';
+  return steps;
+}
+
+// admin = true จะมีปุ่มกดอัปเดตสถานะใต้แต่ละขั้น
+function trackerHtml(b, admin = false) {
+  if (b.Status === 'Cancelled') return '<div class="note" style="background:var(--red-soft);color:#9b2c2c">การจองนี้ถูกยกเลิกแล้ว</div>';
+  const btn = (text, attrs, cls = '', disabled = false) =>
+    `<button class="sm ${cls}" ${attrs} ${disabled ? 'disabled title="ต้องเช็กอินก่อน"' : ''}>${text}</button>`;
+  const action = (s) => {
+    if (!admin) return '';
+    const inHouse = b.Status === 'CheckedIn';
+    if (s.type === 'checkin' && b.Status === 'Confirmed') return btn('เช็กอิน', `data-t="checkin" data-bk="${b.BookingID}"`);
+    if (s.type === 'checkout' && inHouse) return btn('เช็กเอาต์', `data-t="checkout" data-bk="${b.BookingID}"`, 'teal');
+    if ((s.type === 'grooming' || s.type === 'extra') && (b.Status === 'Confirmed' || inHouse) && s.status !== 'Done') {
+      const next = s.status === 'InProgress' ? 'Done' : 'InProgress';
+      const attrs = `data-t="${s.type}" data-bk="${b.BookingID}" data-id="${s.id}" data-s="${next}"`;
+      return btn(next === 'Done' ? 'เสร็จ' : 'เริ่ม', attrs, next === 'Done' ? 'teal' : '', !inHouse);
+    }
+    return '';
+  };
+  return `<div class="tracker">${trackerSteps(b).map((s) => `
+    <div class="st ${s.state === 'done' ? 'done' : ''} ${s.state === 'now' ? 'now' : ''}">
+      <div class="dot">${s.icon}</div>${esc(s.label)}${admin ? `<div class="act">${action(s)}</div>` : ''}</div>`).join('')}</div>`;
+}
+
+// ผูกปุ่มใน tracker ของ Admin เข้ากับ API (done = ฟังก์ชันที่เรียกหลังอัปเดตสำเร็จ)
+function bindTrackerActions(root, done) {
+  root.querySelectorAll('button[data-t]').forEach((el) => (el.onclick = async () => {
+    const { t, bk, id, s } = el.dataset;
+    const url = t === 'grooming' ? `/api/admin/grooming/${id}/status`
+      : t === 'extra' ? `/api/admin/bookings/${bk}/extras/${id}/status`
+      : `/api/admin/bookings/${bk}/${t}`;
+    try { await api(url, { method: 'POST', body: s ? { status: s } : {} }); toast('บันทึกแล้ว', 'ok'); done(); }
+    catch (e) { toast(e.message, 'error'); }
+  }));
+}

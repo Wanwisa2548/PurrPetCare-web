@@ -244,6 +244,16 @@ BEGIN
 END
 GO
 
+-- สถานะของบริการเสริม (พาเดินเล่น ฯลฯ) เพื่อให้แสดงใน Status Tracker และให้ Admin กดอัปเดตได้
+IF COL_LENGTH('booking.Booking_Extras', 'Status') IS NULL
+BEGIN
+    ALTER TABLE booking.Booking_Extras ADD Status varchar(10) NOT NULL
+        CONSTRAINT DF_BE_Status DEFAULT 'Waiting'
+        CONSTRAINT CK_BE_Status CHECK (Status IN ('Waiting','InProgress','Done'));
+    PRINT 'Add column "booking.Booking_Extras.Status" success.';
+END
+GO
+
 -- ตาราง Partition: ข้อมูลก่อนปี 2026 ไปอยู่ FG_History
 IF OBJECT_ID('booking.Payments','U') IS NULL
 BEGIN
