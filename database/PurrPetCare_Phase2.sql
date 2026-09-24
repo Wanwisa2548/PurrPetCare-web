@@ -137,6 +137,14 @@ JOIN customer.Pets p      ON p.PetID = b.PetID
 WHERE b.Status <> 'Cancelled';
 GO
 
+-- บริการเสริมที่ลูกค้าเลือกในแต่ละการจอง + สถานะ (Status Tracker / Admin)
+CREATE OR ALTER VIEW booking.vw_BookingExtras
+AS
+SELECT be.BookingID, be.ExtraID, e.ExtraName, e.Unit, be.Qty, be.LineTotal, be.Status
+FROM booking.Booking_Extras be
+JOIN booking.Extras e ON e.ExtraID = be.ExtraID;
+GO
+
 -- สถานะห้องตอนนี้ + น้องที่พักอยู่ (Dashboard)
 CREATE OR ALTER VIEW hotel.vw_RoomStatusToday
 AS
@@ -495,6 +503,27 @@ BEGIN
 
     UPDATE booking.Booking_Grooming SET Status = @Status WHERE BookingGroomingID = @BookingGroomingID;
     UPDATE booking.Bookings SET TotalPrice = booking.fn_CalculateTotalPrice(@BookingID) WHERE BookingID = @BookingID;
+END
+GO
+
+-- Admin: อัปเดตสถานะบริการเสริม (เช่น พาเดินเล่น)
+CREATE OR ALTER PROCEDURE booking.sp_UpdateExtraStatus @BookingID int, @ExtraID int, @Status varchar(10)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @BookingStatus varchar(10);
+    SELECT @BookingStatus = b.Status
+    FROM booking.Booking_Extras e JOIN booking.Bookings b ON b.BookingID = e.BookingID
+    WHERE e.BookingID = @BookingID AND e.ExtraID = @ExtraID;
+
+    IF @BookingStatus IS NULL
+    BEGIN RAISERROR(N'ไม่พบบริการเสริมนี้ในการจอง', 16, 1); RETURN; END
+    IF @Status NOT IN ('Waiting', 'InProgress', 'Done')
+    BEGIN RAISERROR(N'สถานะไม่ถูกต้อง', 16, 1); RETURN; END
+    IF @Status IN ('InProgress', 'Done') AND @BookingStatus <> 'CheckedIn'
+    BEGIN RAISERROR(N'ต้องเช็กอินน้องก่อนเริ่มบริการ', 16, 1); RETURN; END
+
+    UPDATE booking.Booking_Extras SET Status = @Status WHERE BookingID = @BookingID AND ExtraID = @ExtraID;
 END
 GO
 

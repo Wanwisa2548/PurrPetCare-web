@@ -93,9 +93,10 @@ npm start
 | ค้นหาห้องว่าง | `hotel.fn_AvailableRooms` (Table-valued function) |
 | ค้นหาช่างว่าง | `grooming.fn_AvailableGroomers` |
 | ยืนยันการจอง | `booking.sp_CreateBooking` (TRANSACTION + Table Type `ServiceRequest`/`ExtraRequest` + Sequence เลข BK000001 + `fn_CalculateTotalPrice`) |
-| ติดตามสถานะ | `booking.vw_BookingSummary` (คอลัมน์ `TrackerStage`) |
+| ติดตามสถานะ | ขั้นตอนสร้างจากบริการที่ลูกค้าเลือกจริง (ห้อง / อาบน้ำ ตัดขน ฯลฯ / บริการเสริมเช่นพาเดินเล่น) อ่านจาก `booking.vw_BookingSummary` + `grooming.vw_GroomingSchedule` + `booking.vw_BookingExtras` |
 | Admin: เช็กอิน / เช็กเอาต์ | `sp_CheckIn` / `sp_CheckOut` → **Trigger** `trg_BookingRooms_Status` เปลี่ยนห้องเป็น Occupied / Cleaning เอง |
 | Admin: ทำความสะอาดเสร็จ | `hotel.sp_MarkRoomCleaned` |
+| Admin: แท็บ "การจอง / เช็กอิน" | Tracker เดียวกับที่ลูกค้าเห็น มีปุ่มเช็กอิน / เริ่ม-เสร็จของแต่ละบริการ / เช็กเอาต์ ใต้แต่ละขั้น → `sp_CheckIn`, `sp_UpdateGroomingStatus`, `sp_UpdateExtraStatus`, `sp_CheckOut` |
 | Admin: ตารางคิวช่าง | `grooming.vw_GroomingSchedule` · ปุ่มเริ่ม/เสร็จ → `sp_UpdateGroomingStatus` |
 | Admin: Dashboard | `hotel.vw_RoomStatusToday`, `booking.vw_DailyRevenue`, `ops.Notifications` |
 | Admin: รับเงิน | `booking.sp_AddPayment` → ตาราง `Payments` ที่แบ่ง Partition ตามปี |
@@ -107,5 +108,5 @@ npm start
 3. จองห้อง + อาบน้ำ + ตัดขน กับช่าง A เวลา 10:00 → ได้เลข BK… และยอดรวม
 4. ล็อกอินบัญชีอื่น จองช่าง A เวลา 10:30 วันเดียวกัน → ปุ่มค้นหาช่างจะไม่แสดงช่าง A
    (ถ้าอยากโชว์ Trigger ตรงๆ ให้รันใน SSMS: INSERT คิวซ้อนเข้า `Booking_Grooming` จะโดน ROLLBACK)
-5. หน้า Admin: เช็กอิน → ห้องเปลี่ยนเป็น "มีน้องพัก" · กดเริ่มในตารางช่าง → ฝั่งลูกค้าเห็น "กำลังอาบน้ำเป่าขน"
-6. กดเสร็จ → "หล่อพร้อมกลับบ้าน" · เช็กเอาต์ → ห้องเป็น "รอทำความสะอาด" · รับเงิน → รายได้วันนี้ขึ้น
+5. หน้า Admin แท็บ "การจอง / เช็กอิน": เช็กอิน → ห้องเปลี่ยนเป็น "มีน้องพัก" · กด "เริ่ม" ใต้บริการที่ลูกค้าเลือก (หรือกดในตารางช่าง) → ฝั่งลูกค้าเห็น "กำลังอาบน้ำ" ฯลฯ
+6. กด "เสร็จ" ครบทุกบริการ → "หล่อพร้อมกลับบ้าน" · เช็กเอาต์ → ห้องเป็น "รอทำความสะอาด" · รับเงิน → รายได้วันนี้ขึ้น

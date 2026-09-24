@@ -16,20 +16,6 @@
 
   <script src="js/common.js"></script>
   <script>
-    // ขั้นของ Status Tracker ต้องตรงกับค่า TrackerStage ใน booking.vw_BookingSummary
-    const STAGES = [
-      ['รอเข้าพัก', '📅'], ['กำลังพักผ่อน', '🛏️'], ['กำลังอาบน้ำเป่าขน', '🧼'], ['หล่อพร้อมกลับบ้าน', '✂️'], ['กลับบ้านแล้ว', '🏠'],
-    ];
-
-    function tracker(b) {
-      if (b.TrackerStage === 'ยกเลิกแล้ว') return '<div class="note" style="background:var(--red-soft);color:#9b2c2c">การจองนี้ถูกยกเลิกแล้ว</div>';
-      let stages = STAGES;
-      if (!b.grooming.length) stages = STAGES.filter(([s]) => s !== 'กำลังอาบน้ำเป่าขน' && s !== 'หล่อพร้อมกลับบ้าน');
-      const idx = stages.findIndex(([s]) => s === b.TrackerStage);
-      return `<div class="tracker">${stages.map(([s, ic], i) => `
-        <div class="st ${i < idx ? 'done' : ''} ${i === idx ? 'now' : ''}"><div class="dot">${ic}</div>${s}</div>`).join('')}</div>`;
-    }
-
     async function load() {
       const list = await api('/api/bookings');
       const box = document.getElementById('list');
@@ -42,12 +28,14 @@
               <div class="muted small">จองเมื่อ ${thDate(b.BookingDate)}</div></div>
             <span class="spacer"></span>${badge(b.Status)}
           </div>
-          ${tracker(b)}
+          ${trackerHtml(b)}
           <div class="grid g2" style="margin-top:10px">
             <div>
               ${b.RoomNo ? `<div class="summary-line"><span>🛏️ ห้อง ${esc(b.RoomNo)} (${b.Nights} คืน)</span><span>${thDate(b.CheckInDate)} - ${thDate(b.CheckOutDate)}</span></div>` : ''}
               ${b.grooming.map((g) => `<div class="summary-line"><span>✂️ ${esc(g.ServiceName)} · ${esc(g.StaffName)}</span>
                  <span>${thDate(g.StartTime)} ${badge(g.Status)}</span></div>`).join('')}
+              ${b.extras.map((x) => `<div class="summary-line"><span>✨ ${esc(x.ExtraName)} × ${x.Qty} ${esc(x.Unit)}</span>
+                 <span>${badge(x.Status)}</span></div>`).join('')}
               ${b.Note ? `<div class="muted small">หมายเหตุ: ${esc(b.Note)}</div>` : ''}
             </div>
             <div>

@@ -137,15 +137,15 @@
             <div class="small">${esc(b.CustomerName)} · ${esc(b.Phone)}</div>
             ${b.MedicalNotes ? `<div class="note">⚠️ ${esc(b.MedicalNotes)}</div>` : ''}</td>
           <td>${b.RoomNo ? `ห้อง ${esc(b.RoomNo)}<div class="muted small">${thDate(b.CheckInDate)} - ${thDate(b.CheckOutDate)}</div>` : '<span class="muted">อาบน้ำอย่างเดียว</span>'}</td>
-          <td>${badge(b.Status)}<div class="small muted">${esc(b.TrackerStage)}</div></td>
+          <td>${badge(b.Status)}</td>
           <td>${baht(b.TotalPrice)}<div class="small ${due > 0 ? '' : 'muted'}">ชำระ ${baht(b.PaidAmount)}</div></td>
           <td style="white-space:nowrap">
-            ${b.Status === 'Confirmed' ? `<button class="sm" data-a="checkin" data-id="${b.BookingID}">เช็กอิน</button>
-               <button class="danger sm" data-a="cancel" data-id="${b.BookingID}">ยกเลิก</button>` : ''}
-            ${b.Status === 'CheckedIn' ? `<button class="teal sm" data-a="checkout" data-id="${b.BookingID}">เช็กเอาต์</button>` : ''}
+            ${b.Status === 'Confirmed' ? `<button class="danger sm" data-a="cancel" data-id="${b.BookingID}">ยกเลิก</button>` : ''}
             ${b.Status !== 'Cancelled' && due > 0 ? `<button class="ghost sm" data-a="pay" data-id="${b.BookingID}" data-due="${due}">รับเงิน ${baht(due)}</button>` : ''}
-          </td></tr>`;
+          </td></tr>
+        <tr class="tr-track"><td colspan="6">${trackerHtml(b, true)}</td></tr>`;
       }).join('') : '<tr><td colspan="6" class="empty">ไม่มีรายการ</td></tr>';
+      bindTrackerActions($('bkRows'), refresh);
 
       $('bkRows').querySelectorAll('[data-a]').forEach((b) => (b.onclick = () => {
         const { a, id, due } = b.dataset;
