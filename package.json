@@ -1,0 +1,18 @@
+{
+  "name": "purrpet-care-web",
+  "version": "1.0.0",
+  "description": "PurrPet Care - เว็บโรงแรมสัตว์เลี้ยงและอาบน้ำตัดขน เชื่อมต่อ SQL Server",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "check-db": "node src/check-db.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "mssql": "^11.0.1"
+  }
+}

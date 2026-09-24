@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PurrPet Care</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div>
+        <h1>โรงแรมสัตว์เลี้ยง &amp; อาบน้ำตัดขน ครบจบในที่เดียว</h1>
+        <p class="muted">ฝากน้องพักห้องสะอาดตามไซซ์ จองคิวอาบน้ำตัดขนพร้อมเลือกช่างได้เอง
+          คิดราคาตามน้ำหนักน้องแบบโปร่งใส และติดตามสถานะน้องได้ตลอดเวลา</p>
+        <div class="row" style="margin-top:14px">
+          <a class="btn" href="book.html">จองบริการเลย</a>
+          <a class="btn" style="background:var(--teal)" href="bookings.html">ติดตามสถานะน้อง</a>
+        </div>
+      </div>
+      <div class="pic">🐶🛁🐱</div>
+    </section>
+
+    <section class="grid g3" id="catalog"></section>
+
+    <section class="grid g2" id="authBox" style="margin-top:18px">
+      <div class="card" id="login">
+        <h2>เข้าสู่ระบบ</h2>
+        <form id="loginForm">
+          <div class="field"><label>อีเมล</label><input name="email" type="email" required /></div>
+          <div class="field"><label>รหัสผ่าน</label><input name="password" type="password" required /></div>
+          <button class="block">เข้าสู่ระบบ</button>
+          <p class="muted small">บัญชีทดลอง: aree@mail.com / รหัส 1234</p>
+        </form>
+      </div>
+      <div class="card">
+        <h2>สมัครสมาชิก</h2>
+        <form id="regForm">
+          <div class="field"><label>ชื่อ-นามสกุล</label><input name="fullName" required /></div>
+          <div class="grid g2" style="gap:10px">
+            <div class="field"><label>เบอร์โทร</label><input name="phone" placeholder="0812345678" required /></div>
+            <div class="field"><label>อีเมล</label><input name="email" type="email" required /></div>
+          </div>
+          <div class="field"><label>รหัสผ่าน</label><input name="password" type="password" minlength="4" required /></div>
+          <button class="block teal">สมัครสมาชิก</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script>
+    (async () => {
+      const me = await renderTopbar('index.html');
+      if (me.customer) document.getElementById('authBox').classList.add('hidden');
+
+      const cat = await api('/api/catalog').catch((e) => { toast(e.message, 'error'); return null; });
+      if (cat) {
+        document.getElementById('catalog').innerHTML = `
+          <div class="card"><h3>🛏️ ห้องพัก (ต่อคืน)</h3>${cat.roomTypes.map((r) =>
+            `<div class="summary-line"><span>${esc(r.TypeName)}</span><b>${baht(r.PricePerNight)}</b></div>`).join('')}</div>
+          <div class="card"><h3>🧼 อาบน้ำตัดขน (ราคาเริ่มต้น)</h3>${cat.services.map((s) =>
+            `<div class="summary-line"><span>${esc(s.ServiceName)} <span class="muted small">${s.DurationMin} นาที</span></span><b>${baht(s.BasePrice)}</b></div>`).join('')}
+            <p class="muted small" style="margin:.5em 0 0">น้ำหนัก 5-15 kg +20% · เกิน 15 kg +50%</p></div>
+          <div class="card"><h3>✨ บริการเสริม</h3>${cat.extras.map((x) =>
+            `<div class="summary-line"><span>${esc(x.ExtraName)}</span><b>${baht(x.Price)}/${esc(x.Unit)}</b></div>`).join('')}</div>`;
+      }
+    })();
+
+    const formData = (f) => Object.fromEntries(new FormData(f));
+    document.getElementById('loginForm').onsubmit = async (e) => {
+      e.preventDefault();
+      try { await api('/api/auth/login', { method: 'POST', body: formData(e.target) }); location.href = 'pets.html'; }
+      catch (err) { toast(err.message, 'error'); }
+    };
+    document.getElementById('regForm').onsubmit = async (e) => {
+      e.preventDefault();
+      try { await api('/api/auth/register', { method: 'POST', body: formData(e.target) }); location.href = 'pets.html'; }
+      catch (err) { toast(err.message, 'error'); }
+    };
+  </script>
+</body>
+</html>

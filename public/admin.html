@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin - PurrPet Care</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar"><div class="inner">
+    <a class="logo" href="admin.html"><span class="paw">🐾</span>PurrPet Care · Admin</a>
+    <span class="spacer"></span><a href="index.html" class="small">ไปหน้าลูกค้า</a>
+  </div></header>
+
+  <main class="wrap">
+    <div class="card hidden" id="loginBox" style="max-width:380px;margin:40px auto">
+      <h2>เข้าสู่ระบบ Admin / ช่าง</h2>
+      <form id="adminLogin">
+        <div class="field"><label>รหัสผ่าน</label><input type="password" name="password" required /></div>
+        <button class="block">เข้าสู่ระบบ</button>
+      </form>
+    </div>
+
+    <div id="app" class="hidden">
+      <div class="tabs">
+        <button data-tab="dash" class="on">Dashboard</button>
+        <button data-tab="bookings">การจอง / เช็กอิน</button>
+        <button data-tab="cal">ตารางคิวช่าง</button>
+      </div>
+
+      <!-- ===== Dashboard ===== -->
+      <section id="tab-dash">
+        <div class="grid g4" id="stats" style="margin-bottom:18px"></div>
+        <div class="split">
+          <div class="card">
+            <div class="row"><h2 style="margin:0">สถานะห้องพักตอนนี้</h2><span class="spacer"></span><span class="muted small">hotel.vw_RoomStatusToday</span></div>
+            <div class="rooms" id="rooms" style="margin-top:12px"></div>
+          </div>
+          <div>
+            <div class="card">
+              <h2>รายได้ 7 วันล่าสุด</h2>
+              <div id="revenue"></div>
+            </div>
+            <div class="card">
+              <h2>แจ้งเตือนช่าง</h2>
+              <div id="notifs" class="small"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Bookings ===== -->
+      <section id="tab-bookings" class="hidden">
+        <div class="card">
+          <div class="row" style="margin-bottom:10px">
+            <h2 style="margin:0">รายการจอง</h2><span class="spacer"></span>
+            <select id="bkFilter" style="width:auto">
+              <option value="active">กำลังดำเนินการ</option><option value="Confirmed">รอเช็กอิน</option>
+              <option value="CheckedIn">อยู่ในร้าน</option><option value="Completed">เสร็จสิ้น</option>
+              <option value="Cancelled">ยกเลิก</option><option value="all">ทั้งหมด</option>
+            </select>
+          </div>
+          <div class="table-scroll"><table>
+            <thead><tr><th>เลขที่</th><th>น้อง / เจ้าของ</th><th>ห้องพัก</th><th>สถานะ</th><th>ยอด / ชำระ</th><th></th></tr></thead>
+            <tbody id="bkRows"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ===== Grooming Calendar ===== -->
+      <section id="tab-cal" class="hidden">
+        <div class="card">
+          <div class="row" style="margin-bottom:12px">
+            <h2 style="margin:0">ตารางคิวช่างตัดขน</h2><span class="spacer"></span>
+            <button class="ghost sm" id="prevDay">‹</button>
+            <input type="date" id="calDate" style="width:auto" />
+            <button class="ghost sm" id="nextDay">›</button>
+          </div>
+          <div id="cal"></div>
+          <p class="muted small" style="margin-bottom:0">ข้อมูลจาก grooming.vw_GroomingSchedule · ปุ่มเปลี่ยนสถานะเรียก booking.sp_UpdateGroomingStatus</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let tab = 'dash';
+
+    async function act(url, body) {
+      try { await api(url, { method: 'POST', body: body || {} }); toast('บันทึกแล้ว', 'ok'); refresh(); }
+      catch (e) { toast(e.message, 'error'); }
+    }
+
+    /* ---------- Dashboard ---------- */
+    async function loadDash() {
+      const d = await api('/api/admin/dashboard');
+      const count = (st) => d.rooms.filter((r) => r.Status === st).length;
+      const todayRev = (d.revenue.find((r) => r.PayDate === ymd(new Date())) || {}).Revenue || 0;
+      $('stats').innerHTML = [
+        ['ห้องว่าง', `${count('Available')} / ${d.rooms.length}`],
+        ['น้องอยู่ในร้าน', d.counts.InHouse || 0],
+        ['รอเช็กอิน', d.counts.Waiting || 0],
+        ['รายได้วันนี้', baht(todayRev)],
+      ].map(([l, n]) => `<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+
+      $('rooms').innerHTML = d.rooms.map((r) => `
+        <div class="room ${r.Status}">
+          <div class="row"><span class="no">${esc(r.RoomNo)}</span><span class="spacer"></span><span class="muted small">${r.RoomSize}</span></div>
+          <div style="margin:4px 0">${badge(r.Status)}</div>
+          ${r.PetName ? `<div class="small">${esc(r.PetName)}<br><span class="muted">ออก ${thDate(r.CheckOutDate)}</span></div>` : ''}
+          ${r.Status === 'Cleaning' ? `<button class="teal sm" data-clean="${r.RoomID}" style="margin-top:6px">ทำความสะอาดเสร็จ</button>` : ''}
+        </div>`).join('');
+      $('rooms').querySelectorAll('[data-clean]').forEach((b) => (b.onclick = () => act(`/api/admin/rooms/${b.dataset.clean}/cleaned`)));
+
+      const max = Math.max(1, ...d.revenue.map((r) => Number(r.Revenue)));
+      $('revenue').innerHTML = d.revenue.length ? d.revenue.map((r) => `
+        <div style="margin-bottom:8px"><div class="summary-line small"><span>${thDate(r.PayDate)}</span><b>${baht(r.Revenue)}</b></div>
+          <div style="height:8px;border-radius:4px;background:var(--brand);width:${(Number(r.Revenue) / max) * 100}%"></div></div>`).join('')
+        : '<div class="muted small">ยังไม่มีการชำระเงินใน 7 วันนี้</div>';
+
+      $('notifs').innerHTML = d.notifications.length ? d.notifications.map((n) => `
+        <div style="padding:6px 0;border-bottom:1px solid var(--line)"><b>${esc(n.StaffName || '-')}</b> ${esc(n.Message)}
+          <div class="muted">${thDate(n.CreatedAt)}</div></div>`).join('')
+        : '<div class="muted">ยังไม่มีแจ้งเตือน</div>';
+    }
+
+    /* ---------- Bookings ---------- */
+    async function loadBookings() {
+      const rows = await api('/api/admin/bookings?status=' + $('bkFilter').value);
+      $('bkRows').innerHTML = rows.length ? rows.map((b) => {
+        const due = Number(b.TotalPrice || 0) - Number(b.PaidAmount || 0);
+        return `<tr>
+          <td><b>${esc(b.BookingNo)}</b><div class="muted small">${thDate(b.BookingDate)}</div></td>
+          <td>${petIcon(b.Species)} <b>${esc(b.PetName)}</b> <span class="muted small">${Number(b.WeightKg)} kg</span>
+            <div class="small">${esc(b.CustomerName)} · ${esc(b.Phone)}</div>
+            ${b.MedicalNotes ? `<div class="note">⚠️ ${esc(b.MedicalNotes)}</div>` : ''}</td>
+          <td>${b.RoomNo ? `ห้อง ${esc(b.RoomNo)}<div class="muted small">${thDate(b.CheckInDate)} - ${thDate(b.CheckOutDate)}</div>` : '<span class="muted">อาบน้ำอย่างเดียว</span>'}</td>
+          <td>${badge(b.Status)}<div class="small muted">${esc(b.TrackerStage)}</div></td>
+          <td>${baht(b.TotalPrice)}<div class="small ${due > 0 ? '' : 'muted'}">ชำระ ${baht(b.PaidAmount)}</div></td>
+          <td style="white-space:nowrap">
+            ${b.Status === 'Confirmed' ? `<button class="sm" data-a="checkin" data-id="${b.BookingID}">เช็กอิน</button>
+               <button class="danger sm" data-a="cancel" data-id="${b.BookingID}">ยกเลิก</button>` : ''}
+            ${b.Status === 'CheckedIn' ? `<button class="teal sm" data-a="checkout" data-id="${b.BookingID}">เช็กเอาต์</button>` : ''}
+            ${b.Status !== 'Cancelled' && due > 0 ? `<button class="ghost sm" data-a="pay" data-id="${b.BookingID}" data-due="${due}">รับเงิน ${baht(due)}</button>` : ''}
+          </td></tr>`;
+      }).join('') : '<tr><td colspan="6" class="empty">ไม่มีรายการ</td></tr>';
+
+      $('bkRows').querySelectorAll('[data-a]').forEach((b) => (b.onclick = () => {
+        const { a, id, due } = b.dataset;
+        if (a === 'pay') return act(`/api/admin/bookings/${id}/payment`, { amount: Number(due), method: 'Cash' });
+        if (a === 'cancel' && b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = 'ยืนยันยกเลิก?'; return; }
+        act(`/api/admin/bookings/${id}/${a}`);
+      }));
+    }
+
+    /* ---------- Grooming Calendar ---------- */
+    const DAY_START = 9 * 60, DAY_END = 19 * 60, PX = 1.1; // 1 นาที = 1.1px
+    async function loadCal() {
+      const { groomers, jobs } = await api('/api/admin/schedule?date=' + $('calDate').value);
+      const h = (DAY_END - DAY_START) * PX;
+      const hours = [];
+      for (let m = DAY_START; m < DAY_END; m += 60)
+        hours.push(`<div class="cal-hour" style="top:${(m - DAY_START) * PX}px">${String(m / 60).padStart(2, '0')}:00</div>`);
+      const col = (g) => `<div class="cal-col" style="height:${h}px">${hours.map((x) => x.replace(/>\d\d:00</, '><')).join('')}
+        ${jobs.filter((j) => j.StaffID === g.StaffID).map((j) => `
+          <div class="job ${j.Status}" style="top:${(j.StartMin - DAY_START) * PX}px;height:${Math.max(j.DurationMin * PX, 40)}px"
+               title="${esc(j.MedicalNotes || '')}">
+            <b>${j.StartTime}-${j.EndTime} ${esc(j.ServiceName)}</b>
+            ${petIcon(j.Species)} ${esc(j.PetName)} · ${Number(j.WeightKg)} kg ${j.MedicalNotes ? '⚠️' : ''}
+            <div class="acts">
+              ${j.Status === 'Waiting' ? `<button data-g="${j.BookingGroomingID}" data-s="InProgress">เริ่ม</button>` : ''}
+              ${j.Status === 'InProgress' ? `<button class="teal" data-g="${j.BookingGroomingID}" data-s="Done">เสร็จ</button>` : ''}
+            </div>
+          </div>`).join('')}</div>`;
+      $('cal').innerHTML = groomers.length ? `
+        <div class="table-scroll"><div class="cal" style="grid-template-columns:60px repeat(${groomers.length}, minmax(150px,1fr))">
+          <div class="cal-head"><div></div>${groomers.map((g) => `<div>✂️ ${esc(g.FullName)}</div>`).join('')}</div>
+          <div class="cal-times" style="height:${h}px">${hours.join('')}</div>
+          ${groomers.map(col).join('')}
+        </div></div>` : '<div class="empty">ยังไม่มีช่างในระบบ</div>';
+      $('cal').querySelectorAll('[data-g]').forEach((b) => (b.onclick = () => act(`/api/admin/grooming/${b.dataset.g}/status`, { status: b.dataset.s })));
+    }
+
+    function refresh() {
+      const f = { dash: loadDash, bookings: loadBookings, cal: loadCal }[tab];
+      return f().catch((e) => {
+        if (/Admin/.test(e.message)) return showLogin();
+        toast(e.message, 'error');
+      });
+    }
+    function showLogin() { $('app').classList.add('hidden'); $('loginBox').classList.remove('hidden'); }
+    function showApp() { $('loginBox').classList.add('hidden'); $('app').classList.remove('hidden'); refresh(); }
+
+    document.querySelectorAll('.tabs button').forEach((b) => (b.onclick = () => {
+      tab = b.dataset.tab;
+      document.querySelectorAll('.tabs button').forEach((x) => x.classList.toggle('on', x === b));
+      for (const t of ['dash', 'bookings', 'cal']) $('tab-' + t).classList.toggle('hidden', t !== tab);
+      refresh();
+    }));
+    $('bkFilter').onchange = refresh;
+    $('calDate').value = ymd(new Date());
+    $('calDate').onchange = refresh;
+    $('prevDay').onclick = () => { $('calDate').value = addDays($('calDate').value, -1); refresh(); };
+    $('nextDay').onclick = () => { $('calDate').value = addDays($('calDate').value, 1); refresh(); };
+
+    $('adminLogin').onsubmit = async (e) => {
+      e.preventDefault();
+      try { await api('/api/admin/login', { method: 'POST', body: Object.fromEntries(new FormData(e.target)) }); showApp(); }
+      catch (err) { toast(err.message, 'error'); }
+    };
+
+    api('/api/auth/me').then((me) => (me.admin ? showApp() : showLogin())).catch(showLogin);
+    setInterval(() => { if (!$('app').classList.contains('hidden')) refresh(); }, 30000);
+  </script>
+</body>
+</html>

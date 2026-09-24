@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>น้องของฉัน - PurrPet Care</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <div class="split">
+      <section>
+        <h1>น้องของฉัน</h1>
+        <div class="grid g2" id="petList"></div>
+      </section>
+
+      <aside class="card sticky">
+        <h2>เพิ่มน้องใหม่</h2>
+        <form id="petForm">
+          <div class="field"><label>ชื่อน้อง *</label><input name="petName" required /></div>
+          <div class="grid g2" style="gap:10px">
+            <div class="field"><label>ชนิด *</label>
+              <select name="species"><option value="Dog">🐶 สุนัข</option><option value="Cat">🐱 แมว</option></select></div>
+            <div class="field"><label>เพศ</label>
+              <select name="gender"><option value="">-</option><option value="M">ผู้</option><option value="F">เมีย</option></select></div>
+          </div>
+          <div class="field"><label>สายพันธุ์</label><input name="breed" /></div>
+          <div class="grid g2" style="gap:10px">
+            <div class="field"><label>น้ำหนัก (kg) *</label><input name="weightKg" type="number" step="0.1" min="0.1" max="100" required /></div>
+            <div class="field"><label>วันเกิด</label><input name="birthDate" type="date" /></div>
+          </div>
+          <div class="field"><label>ข้อควรระวัง / โรคประจำตัว</label><textarea name="medicalNotes" rows="2"></textarea></div>
+          <div class="field"><label>ลิงก์รูปน้อง (ถ้ามี)</label><input name="photoURL" placeholder="https://..." /></div>
+          <button class="block">บันทึกโปรไฟล์น้อง</button>
+        </form>
+      </aside>
+    </div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script>
+    const SIZE_TH = { S: 'ไซซ์ S (< 5 kg)', M: 'ไซซ์ M (5-15 kg)', L: 'ไซซ์ L (> 15 kg)' };
+
+    async function loadPets() {
+      const pets = await api('/api/pets');
+      const box = document.getElementById('petList');
+      if (!pets.length) { box.innerHTML = '<div class="card empty">ยังไม่มีน้อง เพิ่มโปรไฟล์น้องทางด้านขวาได้เลย</div>'; return; }
+      box.innerHTML = pets.map((p) => `
+        <div class="card">
+          <div class="pet">
+            <div class="avatar">${p.PhotoURL ? `<img src="${esc(p.PhotoURL)}" alt="">` : petIcon(p.Species)}</div>
+            <div>
+              <h3 style="margin:0">${esc(p.PetName)}</h3>
+              <div class="muted small">${esc(p.Breed || (p.Species === 'Cat' ? 'แมว' : 'สุนัข'))}
+                ${p.Gender ? '· ' + (p.Gender === 'M' ? 'ผู้' : 'เมีย') : ''}</div>
+              <div class="small">${Number(p.WeightKg)} kg · <b>${SIZE_TH[p.WeightClass]}</b></div>
+            </div>
+          </div>
+          ${p.MedicalNotes ? `<div class="note">⚠️ ${esc(p.MedicalNotes)}</div>` : ''}
+          <div class="row" style="margin-top:12px"><a class="btn" href="book.html?pet=${p.PetID}">จองให้น้อง${esc(p.PetName)}</a></div>
+        </div>`).join('');
+    }
+
+    (async () => {
+      await requireCustomer('pets.html');
+      loadPets().catch((e) => toast(e.message, 'error'));
+    })();
+
+    document.getElementById('petForm').onsubmit = async (e) => {
+      e.preventDefault();
+      try {
+        await api('/api/pets', { method: 'POST', body: Object.fromEntries(new FormData(e.target)) });
+        e.target.reset();
+        toast('เพิ่มน้องเรียบร้อย', 'ok');
+        loadPets();
+      } catch (err) { toast(err.message, 'error'); }
+    };
+  </script>
+</body>
+</html>
