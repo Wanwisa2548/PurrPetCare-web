@@ -74,6 +74,8 @@ npm start
 |---|---|
 | `Login failed for user 'purrpet_web'` | ยังไม่ได้เปิด Mixed Mode หรือยังไม่ Restart SQL Server (ข้อ 2.1, 2.4) หรือยังไม่ได้รันไฟล์ ③ |
 | `Failed to connect ... instance` / `ETIMEOUT` | ยังไม่ได้ Start **SQL Server Browser** (ข้อ 2.3) หรือชื่อ `DB_INSTANCE` ผิด |
+| `Port for SQLEXPRESS not found in localhost` | เครื่องนี้ไม่มี instance ชื่อ SQLEXPRESS (ใช้ default instance `MSSQLSERVER`) → ในไฟล์ `.env` ให้เว้น `DB_INSTANCE=` ว่างไว้ ดูชื่อ instance ได้จาก SQL Server Configuration Manager → SQL Server Services |
+| `Cannot open database "PurrPetCare"` / `Login failed` ทั้งที่เปิด Mixed Mode แล้ว | ยังไม่ได้สร้างฐานข้อมูล → รันไฟล์ ①, ②, ③ ใน `database/` ตามลำดับ (ข้อ 3) |
 | `ECONNREFUSED` | ยังไม่ได้เปิด TCP/IP (ข้อ 2.2) |
 | `permission was denied` | รันไฟล์ ③ ใหม่ (ต้องรันหลัง Phase 2) |
 | อยากลบตารางแล้วโดนห้าม | เป็นผลของ Database Trigger รัน `DISABLE TRIGGER trg_ProtectTables ON DATABASE;` ก่อน |
