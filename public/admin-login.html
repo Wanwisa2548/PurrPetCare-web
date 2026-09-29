@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="พื้นที่เข้าสู่ระบบสำหรับผู้ดูแล PurrPetCare">
+  <title>Admin Login — PurrPetCare</title>
+  <link rel="icon" type="image/png" href="/assets/pets/purrpetcare-logo-mark.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-page-body admin-auth-page">
+  <main class="admin-login-shell">
+    <section class="admin-login-visual" aria-label="PurrPetCare Admin Portal">
+      <img class="login-visual-image" src="/assets/pets/purrpetcare-hero.jpg" alt="บรรยากาศการดูแลสัตว์เลี้ยงของ PurrPetCare">
+      <a class="login-brand-link" href="index.html" aria-label="PurrPetCare หน้าหลัก"><span data-brand-lockup="hero"></span></a>
+      <div class="admin-visual-copy"><span class="eyebrow">Protected operations</span><h2>CARE IN<br>EVERY DETAIL.</h2><p>พื้นที่ทำงานสำหรับทีมดูแล PurrPetCare</p></div>
+    </section>
+    <section class="admin-login-panel" aria-labelledby="admin-login-title">
+      <div class="admin-login-inner">
+        <a class="login-back-link" href="index.html">← กลับหน้าหลัก</a>
+        <span class="eyebrow">Admin portal</span>
+        <div class="admin-auth-heading"><span class="admin-security-icon" id="adminSecurityIcon" aria-hidden="true"></span><div><h1 id="admin-login-title">Management Access</h1><p>เข้าสู่ระบบสำหรับผู้ดูแลระบบ</p></div></div>
+        <form id="adminLoginForm" class="login-form">
+          <div class="field"><label for="adminPassword">รหัสผ่านผู้ดูแล</label><div class="password-control"><input id="adminPassword" name="password" type="password" autocomplete="current-password" required autofocus><button type="button" data-password-toggle="adminPassword" aria-label="แสดงรหัสผ่าน">แสดง</button></div></div>
+          <p class="form-error" id="adminLoginError" role="alert" aria-live="polite"></p>
+          <button class="block login-submit" type="submit" data-idle-label="เข้าสู่ระบบ Admin">เข้าสู่ระบบ Admin</button>
+        </form>
+        <p class="admin-auth-note">พื้นที่นี้ใช้ session และสิทธิ์ Admin จากระบบเดิม ไม่เชื่อมกับบัญชีลูกค้า</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script>
+    const form = document.getElementById('adminLoginForm');
+    const error = document.getElementById('adminLoginError');
+    document.getElementById('adminSecurityIcon').innerHTML = icon('shield');
+    bindPasswordToggles();
+    form.onsubmit = async (event) => {
+      event.preventDefault();
+      const button = form.querySelector('[type="submit"]');
+      error.textContent = '';
+      button.disabled = true;
+      button.innerHTML = '<span class="button-spinner" aria-hidden="true"></span>กำลังเข้าสู่ระบบ...';
+      try {
+        await api('/api/admin/login', { method: 'POST', body: Object.fromEntries(new FormData(form)) });
+        button.textContent = '✓ เข้าสู่ระบบสำเร็จ';
+        location.href = 'admin.html';
+      } catch (err) {
+        error.textContent = err.message;
+        button.disabled = false;
+        button.textContent = button.dataset.idleLabel;
+      }
+    };
+    api('/api/auth/me').then((me) => { if (me.admin) location.replace('admin.html'); }).catch(() => {});
+  </script>
+</body>
+</html>
