@@ -1,63 +1,56 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ติดตามสถานะ - PurrPet Care</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ติดตามสถานะ — PurrPetCare</title>
+  <link rel="icon" type="image/png" href="/assets/pets/purrpetcare-logo-mark.png">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <main class="wrap">
-    <div class="row"><h1 style="margin:0">ติดตามสถานะน้อง</h1><span class="spacer"></span>
-      <button class="ghost sm" id="refresh">รีเฟรช</button></div>
-    <p class="muted small">หน้านี้อัปเดตอัตโนมัติทุก 20 วินาที</p>
-    <div id="list"></div>
+  <main class="wrap page-shell">
+    <header class="page-head">
+      <div><span class="eyebrow">Care journey</span><h1>ติดตามน้องของคุณ</h1><p class="muted">สถานะด้านล่างอัปเดตจากข้อมูลการจอง บริการ และการปฏิบัติงานจริงในระบบ</p></div>
+      <button class="ghost" id="refresh" type="button"><span id="refreshIcon"></span> รีเฟรช</button>
+    </header>
+    <div class="db-proof" style="margin:0 0 26px"><span id="liveDbIcon"></span><span>อัปเดตอัตโนมัติทุก 20 วินาที • ข้อมูลจาก booking.vw_BookingSummary, grooming.vw_GroomingSchedule และ booking.vw_BookingExtras</span></div>
+    <div id="list" aria-live="polite"><div class="card loading-state"><div class="spinner"></div></div></div>
   </main>
 
   <script src="js/common.js"></script>
   <script>
+    document.getElementById('refreshIcon').innerHTML = icon('refresh');
+    document.getElementById('liveDbIcon').innerHTML = icon('database');
     async function load() {
-      const list = await api('/api/bookings');
       const box = document.getElementById('list');
-      if (!list.length) { box.innerHTML = '<div class="card empty">ยังไม่มีการจอง <a href="book.html">จองบริการ</a></div>'; return; }
-      box.innerHTML = list.map((b) => `
-        <div class="card">
-          <div class="row">
-            <span style="font-size:1.6rem">${petIcon(b.Species)}</span>
-            <div><h2 style="margin:0">${esc(b.PetName)} <span class="muted small">#${esc(b.BookingNo)}</span></h2>
-              <div class="muted small">จองเมื่อ ${thDate(b.BookingDate)}</div></div>
-            <span class="spacer"></span>${badge(b.Status)}
-          </div>
+      box.innerHTML = '<div class="card loading-state"><div class="spinner"></div></div>';
+      try {
+        const list = await api('/api/bookings');
+        if (!list.length) { box.innerHTML = `<div class="card empty"><div class="icon-box">${icon('calendar')}</div><h3>ยังไม่มีการจอง</h3><p>เมื่อจองบริการแล้ว คุณจะติดตามทุกขั้นตอนได้จากหน้านี้</p><a class="btn" href="book.html">จองบริการให้น้อง</a></div>`; return; }
+        box.innerHTML = list.map((b) => `<article class="card booking-record">
+          <header class="row"><div class="icon-box">${petIcon(b.Species)}</div><div><span class="eyebrow" style="margin:0 0 3px">Booking ${esc(b.BookingNo)}</span><h2 style="font-size:2rem;margin:0">${esc(b.PetName)}</h2><div class="muted small">จองเมื่อ ${thDate(b.BookingDate)}</div></div><span class="spacer"></span>${badge(b.Status)}</header>
           ${trackerHtml(b)}
-          <div class="grid g2" style="margin-top:10px">
+          <div class="grid g2" style="margin-top:18px">
             <div>
-              ${b.RoomNo ? `<div class="summary-line"><span>🛏️ ห้อง ${esc(b.RoomNo)} (${b.Nights} คืน)</span><span>${thDate(b.CheckInDate)} - ${thDate(b.CheckOutDate)}</span></div>` : ''}
-              ${b.grooming.map((g) => `<div class="summary-line"><span>✂️ ${esc(g.ServiceName)} · ${esc(g.StaffName)}</span>
-                 <span>${thDate(g.StartTime)} ${badge(g.Status)}</span></div>`).join('')}
-              ${b.extras.map((x) => `<div class="summary-line"><span>✨ ${esc(x.ExtraName)} × ${x.Qty} ${esc(x.Unit)}</span>
-                 <span>${badge(x.Status)}</span></div>`).join('')}
-              ${b.Note ? `<div class="muted small">หมายเหตุ: ${esc(b.Note)}</div>` : ''}
+              ${b.RoomNo ? `<div class="summary-line"><span class="row">${icon('bed')} ห้อง ${esc(b.RoomNo)} (${b.Nights} คืน)</span><span>${thDate(b.CheckInDate)} – ${thDate(b.CheckOutDate)}</span></div>` : ''}
+              ${b.grooming.map((g) => `<div class="summary-line"><span class="row">${serviceIcon(g.ServiceName)} ${esc(g.ServiceName)} · ${esc(g.StaffName)}</span><span>${thDate(g.StartTime)} ${badge(g.Status)}</span></div>`).join('')}
+              ${b.extras.map((x) => `<div class="summary-line"><span class="row">${serviceIcon(x.ExtraName)} ${esc(x.ExtraName)} × ${x.Qty} ${esc(x.Unit)}</span><span>${badge(x.Status)}</span></div>`).join('')}
+              ${b.Note ? `<div class="note">หมายเหตุ: ${esc(b.Note)}</div>` : ''}
             </div>
-            <div>
-              <div class="summary-line"><span>ยอดรวม</span><b>${baht(b.TotalPrice)}</b></div>
-              <div class="summary-line"><span>ชำระแล้ว</span><span>${baht(b.PaidAmount)}</span></div>
-              ${b.Status === 'Confirmed' ? `<div style="text-align:right;margin-top:8px"><button class="danger sm" data-cancel="${b.BookingID}">ยกเลิกการจอง</button></div>` : ''}
-            </div>
+            <div><div class="summary-line"><span>ยอดรวม</span><b>${baht(b.TotalPrice)}</b></div><div class="summary-line"><span>ชำระแล้ว</span><span>${baht(b.PaidAmount)}</span></div>
+            ${b.Status === 'Confirmed' ? `<div style="text-align:right;margin-top:12px"><button class="danger sm" data-cancel="${b.BookingID}">ยกเลิกการจอง</button></div>` : ''}</div>
           </div>
-        </div>`).join('');
-      box.querySelectorAll('[data-cancel]').forEach((el) => (el.onclick = async () => {
-        if (el.dataset.confirm !== '1') { el.dataset.confirm = '1'; el.textContent = 'กดอีกครั้งเพื่อยืนยัน'; return; }
-        try { await api(`/api/bookings/${el.dataset.cancel}/cancel`, { method: 'POST' }); toast('ยกเลิกแล้ว', 'ok'); load(); }
-        catch (e) { toast(e.message, 'error'); }
-      }));
+        </article>`).join('');
+        box.querySelectorAll('[data-cancel]').forEach((el) => (el.onclick = async () => {
+          if (el.dataset.confirm !== '1') { el.dataset.confirm = '1'; el.textContent = 'กดอีกครั้งเพื่อยืนยัน'; return; }
+          el.disabled = true;
+          try { await api(`/api/bookings/${el.dataset.cancel}/cancel`,{ method:'POST' }); toast('ยกเลิกการจองแล้ว','ok'); load(); }
+          catch (e) { el.disabled = false; toast(e.message,'error'); }
+        }));
+      } catch (e) { box.innerHTML = errorHtml(e.message); throw e; }
     }
-
-    (async () => {
-      await requireCustomer('bookings.html');
-      await load();
-      setInterval(() => load().catch(() => {}), 20000);
-    })().catch((e) => toast(e.message, 'error'));
-    document.getElementById('refresh').onclick = () => load().catch((e) => toast(e.message, 'error'));
+    (async () => { await requireCustomer('bookings.html'); await load(); setInterval(() => load().catch(() => {}),20000); })().catch((e) => { if (e.message !== 'not logged in') toast(e.message,'error'); });
+    document.getElementById('refresh').onclick = () => load().catch((e) => toast(e.message,'error'));
   </script>
 </body>
 </html>

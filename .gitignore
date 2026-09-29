@@ -2,3 +2,7 @@ node_modules/
 .env
 *.log
 .DS_Store
+
+# Codex / Chrome Visual QA temporary files
+chrome-*-qa-profile*/
+*-revision-qa.png
