@@ -46,21 +46,21 @@
     const SIZE_TH = { S: 'ไซซ์ S', M: 'ไซซ์ M', L: 'ไซซ์ L' };
     async function loadPets() {
       const box = document.getElementById('petList');
-      box.innerHTML = '<div class="card loading-state"><div class="spinner"></div></div>';
-      try {
-        const pets = await api('/api/pets');
-        if (!pets.length) {
-          box.innerHTML = `<div class="card empty" style="grid-column:1/-1"><div class="icon-box">${icon('care')}</div><h3>ยังไม่มีโปรไฟล์น้อง</h3><p>เพิ่มเพื่อนตัวโปรดคนแรก แล้วเริ่มเลือกบริการที่เหมาะกับเขาได้เลย</p><a class="btn" href="#addPet">เพิ่มน้องคนแรก</a></div>`;
-          return;
-        }
-        box.innerHTML = pets.map((p) => `<article class="card pet-card card-hover">
-          <div class="pet"><div class="avatar">${p.PhotoURL ? `<img src="${esc(p.PhotoURL)}" alt="รูปของ${esc(p.PetName)}" onerror="this.replaceWith(document.createRange().createContextualFragment(petIcon('${esc(p.Species)}')))" />` : petIcon(p.Species)}</div>
-          <div><span class="eyebrow" style="margin-bottom:5px">${p.Species === 'Cat' ? 'Cat profile' : 'Dog profile'}</span><h2 style="font-size:2rem;margin-bottom:4px">${esc(p.PetName)}</h2><div class="muted small">${esc(p.Breed || (p.Species === 'Cat' ? 'แมว' : 'สุนัข'))}</div></div></div>
-          <div class="pet-meta"><span>น้ำหนัก<b>${Number(p.WeightKg)} kg</b></span><span>ขนาดตัว<b>${SIZE_TH[p.WeightClass]}</b></span><span>เพศ<b>${p.Gender ? (p.Gender === 'M' ? 'ผู้' : 'เมีย') : 'ไม่ระบุ'}</b></span><span>วันเกิด<b>${p.BirthDate ? thDate(p.BirthDate) : 'ไม่ระบุ'}</b></span></div>
-          ${p.MedicalNotes ? `<div class="note">${icon('care')} ${esc(p.MedicalNotes)}</div>` : ''}
-          <div class="row" style="margin-top:16px"><a class="btn block" href="book.html?pet=${p.PetID}">จองบริการให้${esc(p.PetName)}</a></div>
-        </article>`).join('');
-      } catch (e) { box.innerHTML = errorHtml(e.message); throw e; }
+      if (!pets.length) { box.innerHTML = '<div class="card empty">ยังไม่มีน้อง เพิ่มโปรไฟล์น้องทางด้านขวาได้เลย</div>'; return; }
+      box.innerHTML = pets.map((p) => `
+        <div class="card">
+          <div class="pet">
+            <div class="avatar">${p.PhotoURL ? `<img src="${esc(p.PhotoURL)}" alt="">` : petIcon(p.Species)}</div>
+            <div>
+              <h3 style="margin:0">${esc(p.PetName)}</h3>
+              <div class="muted small">${esc(p.Breed || (p.Species === 'Cat' ? 'แมว' : 'สุนัข'))}
+                ${p.Gender ? '· ' + (p.Gender === 'M' ? 'ผู้' : 'เมีย') : ''}</div>
+              <div class="small">${Number(p.WeightKg)} kg · <b>${SIZE_TH[p.WeightClass]}</b></div>
+            </div>
+          </div>
+          ${p.MedicalNotes ? `<div class="note">⚠️ ${esc(p.MedicalNotes)}</div>` : ''}
+          <div class="row" style="margin-top:12px"><a class="btn" href="book.html?pet=${p.PetID}">จองให้น้อง${esc(p.PetName)}</a></div>
+        </div>`).join('');
     }
 
     (async () => { await requireCustomer('pets.html'); await loadPets(); })().catch((e) => { if (e.message !== 'not logged in') toast(e.message, 'error'); });
