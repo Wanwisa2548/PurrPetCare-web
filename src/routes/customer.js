@@ -124,13 +124,18 @@ router.post('/bookings', needLogin, wrap(async (req, res) => {
 
 /* ---------- การจองของฉัน + Status Tracker (booking.vw_BookingSummary) ---------- */
 router.get('/bookings', needLogin, wrap(async (req, res) => {
+  res.set('Cache-Control', 'private, no-store');
   const cid = [sql.Int, req.session.customer.id];
   const [bookings, grooming, extras] = await Promise.all([
     query(
-      `SELECT BookingID, BookingNo, CONVERT(char(16), BookingDate, 120) AS BookingDate, Status, TotalPrice, PaidAmount,
-              PetName, Species, RoomNo, CONVERT(char(10), CheckInDate, 23) AS CheckInDate,
-              CONVERT(char(10), CheckOutDate, 23) AS CheckOutDate, Nights, TrackerStage, Note
-       FROM booking.vw_BookingSummary WHERE CustomerID = @cid ORDER BY BookingID DESC`, { cid }),
+      `SELECT b.BookingID, b.BookingNo, CONVERT(char(16), b.BookingDate, 120) AS BookingDate,
+              b.Status, b.TotalPrice, b.PaidAmount, b.PetID, b.PetName, b.Species, p.PhotoURL,
+              b.RoomNo, CONVERT(char(10), b.CheckInDate, 23) AS CheckInDate,
+              CONVERT(char(10), b.CheckOutDate, 23) AS CheckOutDate, b.Nights, b.TrackerStage, b.Note
+       FROM booking.vw_BookingSummary b
+       JOIN customer.Pets p ON p.PetID = b.PetID AND p.CustomerID = b.CustomerID
+       WHERE b.CustomerID = @cid
+       ORDER BY b.BookingID DESC`, { cid }),
     query(
       `SELECT g.BookingID, g.ServiceName, g.StaffName, CONVERT(char(16), g.StartTime, 120) AS StartTime,
               CONVERT(char(5), g.EndTime, 108) AS EndTime, g.Price, g.Status

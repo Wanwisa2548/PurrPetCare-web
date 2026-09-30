@@ -43,6 +43,21 @@ const ICONS = {
 };
 const icon = (name) => ICONS[name] || ICONS.care;
 const petIcon = (sp) => icon(sp === 'Cat' ? 'cat' : 'dog');
+function resolvePetImage(pet = {}) {
+  const photoURL = typeof pet.PhotoURL === 'string' ? pet.PhotoURL.trim() : '';
+  return photoURL || null;
+}
+function petProfileImage(pet = {}, variant = '') {
+  const photoURL = resolvePetImage(pet);
+  const petName = String(pet.PetName || '').trim();
+  const label = petName ? `${petName} profile photo` : 'Pet profile';
+  const className = `pet-profile-image${variant ? ` pet-profile-image--${variant}` : ''}`;
+  const fallback = `<span class="pet-profile-fallback" role="img" aria-label="${esc(label)}"${photoURL ? ' hidden' : ''}>${petIcon(pet.Species)}</span>`;
+  const image = photoURL
+    ? `<img src="${esc(photoURL)}" alt="${esc(label)}" onerror="this.hidden=true;this.nextElementSibling.hidden=false">`
+    : '';
+  return `<span class="${className}">${image}${fallback}</span>`;
+}
 const loadingHtml = (label = 'กำลังโหลดข้อมูล') => `<div class="loading-state"><div><div class="spinner" aria-hidden="true"></div><span class="sr-only">${esc(label)}</span></div></div>`;
 const errorHtml = (message) => `<div class="card empty"><div class="icon-box">${icon('database')}</div><b>ไม่สามารถโหลดข้อมูลได้</b><p>${esc(message)}</p></div>`;
 

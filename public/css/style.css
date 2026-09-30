@@ -172,6 +172,7 @@ input[type=checkbox], input[type=radio] { width: 18px; min-height: 18px; accent-
 .login-visual-copy .eyebrow { color: #ffd99d; }
 .login-visual-copy h1 { max-width: 640px; margin-bottom: 18px; overflow-wrap: anywhere; color: var(--white); font-size: clamp(2.9rem,5vw,5.5rem); }
 .login-visual-copy p { max-width: 520px; margin: 0; color: #f4e9df; font-size: 1.02rem; }
+.customer-login-visual .login-visual-copy p { width: calc(100% + clamp(20px,3vw,36px)); max-width: none; font-size: clamp(.88rem,1.15vw,1rem); white-space: nowrap; }
 .customer-login-panel { min-width: 0; display: grid; place-items: center; padding: clamp(30px,5vw,76px); background: linear-gradient(145deg,#fff 0%,#fff 62%,#fff7ec 100%); }
 .login-panel-inner,.login-form-panel { width: min(100%,500px); min-width: 0; }
 .login-panel-inner { animation: authPanelIn 620ms 160ms ease both; }
@@ -230,8 +231,14 @@ input[type=checkbox], input[type=radio] { width: 18px; min-height: 18px; accent-
 
 /* Pets */
 .pet-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; } .pet-card { min-height: 245px; overflow: hidden; }
-.pet { display: flex; gap: 16px; align-items: center; } .pet .avatar { width: 78px; height: 78px; border-radius: 22px; display: grid; place-items: center; flex: none; overflow: hidden; background: var(--soft-cream); color: var(--brand-orange-dark); }
-.pet .avatar img { width: 100%; height: 100%; object-fit: cover; } .pet-card .pet-meta { margin: 22px 0 14px; padding: 14px 0; display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; border-block: 1px solid var(--line); }
+.pet { display: flex; gap: 16px; align-items: center; }
+.pet-profile-image { display: grid; place-items: center; flex: none; overflow: hidden; background: var(--soft-cream); color: var(--brand-orange-dark); border: 1px solid #eadbca; box-shadow: 0 8px 20px rgba(61,47,38,.09); }
+.pet-profile-image img,.pet-profile-fallback { width: 100%; height: 100%; grid-area: 1/1; }
+.pet-profile-image img { object-fit: cover; object-position: center; }
+.pet-profile-fallback { display: grid; place-items: center; background: linear-gradient(145deg,#fff9ef,var(--soft-cream)); }
+.pet-profile-fallback[hidden] { display: none; }
+.pet-profile-image--card { width: 78px; height: 78px; border-radius: 22px; }
+.pet-card .pet-meta { margin: 22px 0 14px; padding: 14px 0; display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; border-block: 1px solid var(--line); }
 .pet-meta span { color: var(--text-secondary); font-size: .78rem; } .pet-meta b { display: block; color: var(--text-primary); font-size: .9rem; } .add-pet-card { border-top: 4px solid var(--brand-orange); }
 
 /* Booking */
@@ -255,6 +262,12 @@ input[type=checkbox], input[type=radio] { width: 18px; min-height: 18px; accent-
 .tracker .st.done .dot { background: var(--success-soft); border-color: #bad0bd; color: var(--success); } .tracker .st.done::before,.tracker .st.now::before { background: var(--success); }
 .tracker .st.now { color: var(--text-primary); font-weight: 700; } .tracker .st.now .dot { background: var(--brand-orange); border-color: var(--brand-orange); color: var(--espresso); box-shadow: 0 0 0 5px var(--brand-orange-soft); }
 .tracker .st .act { min-height: 30px; margin-top: 7px; } .booking-record { padding: 28px; } .booking-record + .booking-record { margin-top: 20px; }
+.booking-record-header { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 16px; align-items: center; }
+.pet-profile-image--booking { width: 60px; height: 60px; border-radius: 18px; }
+.booking-record-copy { min-width: 0; }
+.booking-record-copy .eyebrow { margin: 0 0 3px; }
+.booking-record-copy h2 { margin: 0; font-size: 2rem; }
+.booking-record-header > .badge { align-self: start; }
 
 /* Tables */
 .table-scroll { width: 100%; overflow-x: auto; border-radius: 12px; } table { width: 100%; border-collapse: collapse; font-size: .88rem; }
@@ -306,12 +319,17 @@ td { padding: 14px 10px; border-bottom: 1px solid var(--line); vertical-align: t
 @media (max-width: 680px) {
   body { font-size: 14px; } .wrap { padding: 34px 16px 64px; } .section { padding: 72px 16px; } .topbar .inner { padding-inline: 14px; gap: 11px; } .brand-lockup--navbar { --brand-visible-height: 44px; }
   .brand-lockup--hero { --brand-visible-height: 60px; }
+  .customer-login-visual .login-visual-copy p { width: auto; max-width: 520px; font-size: 1.02rem; white-space: normal; }
   .hero { min-height: 720px; } .hero-media img { object-position: 70% bottom; } .hero-media::after { background: linear-gradient(180deg,rgba(251,248,243,.97) 0%,rgba(251,248,243,.9) 47%,rgba(251,248,243,.1) 76%); }
   .hero-content { align-self: start; padding: 58px 18px 220px; } .hero h1 { font-size: clamp(3rem,14vw,4.3rem); } .hero-actions .btn { width: 100%; } .trust-row { gap: 9px 16px; }
   .g2,.g3,.g4,.pet-grid { grid-template-columns: 1fr; } .page-head { align-items: start; flex-direction: column; } .editorial-copy { padding: 42px 24px; } .editorial-media { min-height: 340px; }
   .tracking-panel { padding: 20px; } .cta-band .section-inner,.footer-bottom { align-items: flex-start; flex-direction: column; }
   .cta-band .btn { width: 100%; } .footer-grid { grid-template-columns: 1fr; } .footer-grid > div:not(:first-child) { border-top: 1px solid #403933; padding-top: 20px; }
   .booking-progress { grid-template-columns: repeat(5,minmax(54px,1fr)); overflow-x: auto; } .booking-progress div { font-size: .58rem; } .wizard-card,.booking-record,.card { padding: 20px; }
+  .booking-record-header { grid-template-columns: auto minmax(0,1fr); gap: 12px; align-items: center; }
+  .pet-profile-image--booking { width: 48px; height: 48px; border-radius: 15px; }
+  .booking-record-copy h2 { font-size: 1.7rem; }
+  .booking-record-header > .badge { grid-column: 2; justify-self: start; }
   .step-title { align-items: flex-start; } .step-title .spacer { display: none; } .tracker { margin-inline: -12px; padding-inline: 12px; } .tracker .st { min-width: 100px; }
   .admin-topbar { padding: 0 18px; } .admin-content { padding: 18px 14px; } .stats-grid { grid-template-columns: repeat(2,1fr); } .stat { min-height: 115px; padding: 16px; }
 }
