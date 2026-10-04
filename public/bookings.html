@@ -23,15 +23,12 @@
     document.getElementById('liveDbIcon').innerHTML = icon('database');
     async function load() {
       const box = document.getElementById('list');
-      if (!list.length) { box.innerHTML = '<div class="card empty">ยังไม่มีการจอง <a href="book.html">จองบริการ</a></div>'; return; }
-      box.innerHTML = list.map((b) => `
-        <div class="card">
-          <div class="row">
-            <span style="font-size:1.6rem">${petIcon(b.Species)}</span>
-            <div><h2 style="margin:0">${esc(b.PetName)} <span class="muted small">#${esc(b.BookingNo)}</span></h2>
-              <div class="muted small">จองเมื่อ ${thDate(b.BookingDate)}</div></div>
-            <span class="spacer"></span>${badge(b.Status)}
-          </div>
+      box.innerHTML = '<div class="card loading-state"><div class="spinner"></div></div>';
+      try {
+        const list = await api('/api/bookings', { cache: 'no-store' });
+        if (!list.length) { box.innerHTML = `<div class="card empty"><div class="icon-box">${icon('calendar')}</div><h3>ยังไม่มีการจอง</h3><p>เมื่อจองบริการแล้ว คุณจะติดตามทุกขั้นตอนได้จากหน้านี้</p><a class="btn" href="book.html">จองบริการให้น้อง</a></div>`; return; }
+        box.innerHTML = list.map((b) => `<article class="card booking-record">
+          <header class="booking-record-header">${petProfileImage(b, 'booking')}<div class="booking-record-copy"><span class="eyebrow">Booking ${esc(b.BookingNo)}</span><h2>${esc(b.PetName)}</h2><div class="muted small">จองเมื่อ ${thDate(b.BookingDate)}</div></div>${badge(b.Status)}</header>
           ${trackerHtml(b)}
           <div class="grid g2" style="margin-top:18px">
             <div>
