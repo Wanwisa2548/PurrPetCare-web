@@ -1,79 +1,125 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>น้องของฉัน - PurrPet Care</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>น้องของฉัน — PurrPetCare</title>
+  <link rel="icon" type="image/png" href="/assets/pets/purrpetcare-logo-mark.png">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <main class="wrap">
-    <div class="split">
-      <section>
-        <h1>น้องของฉัน</h1>
-        <div class="grid g2" id="petList"></div>
-      </section>
+  <main class="wrap page-shell">
+    <header class="page-head">
+      <div><span class="eyebrow">My pets</span><h1>น้องของฉัน</h1><p class="muted">เก็บข้อมูลสำคัญของน้องไว้ในที่เดียว เพื่อให้ทุกบริการเหมาะกับเขามากที่สุด</p><div class="pet-stats" id="petStats"></div></div>
+      <a class="btn pet-head-add" href="#addPet">+ เพิ่มน้อง</a>
+    </header>
+    <section aria-labelledby="petListTitle">
+        <h2 id="petListTitle" class="sr-only">รายชื่อน้อง</h2>
+        <div class="pet-grid" id="petList" aria-live="polite"><div class="card loading-state"><div class="spinner"></div></div></div>
+    </section>
 
-      <aside class="card sticky">
-        <h2>เพิ่มน้องใหม่</h2>
+    <dialog class="add-pet-dialog" id="addPet" aria-labelledby="addPetTitle">
+      <div class="card add-pet-card">
+        <div class="summary-head add-pet-head"><div class="icon-box art-box tone-profile" id="addPetArt"></div><div><h2 id="addPetTitle">เพิ่มน้องใหม่</h2><span class="small">น้ำหนักใช้เลือกขนาดห้องและคำนวณราคากรูมมิ่งอัตโนมัติ</span></div><button class="dialog-close" type="button" id="closeAddPet" aria-label="ปิดฟอร์ม">✕</button></div>
+        <div class="summary-body">
         <form id="petForm">
-          <div class="field"><label>ชื่อน้อง *</label><input name="petName" required /></div>
-          <div class="grid g2" style="gap:10px">
-            <div class="field"><label>ชนิด *</label>
-              <select name="species"><option value="Dog">🐶 สุนัข</option><option value="Cat">🐱 แมว</option></select></div>
-            <div class="field"><label>เพศ</label>
-              <select name="gender"><option value="">-</option><option value="M">ผู้</option><option value="F">เมีย</option></select></div>
+          <div class="field"><label for="petName">ชื่อน้อง *</label><input id="petName" name="petName" autocomplete="off" required></div>
+          <div class="grid g2" style="gap:12px">
+            <div class="field"><label for="species">ชนิด *</label><select id="species" name="species"><option value="Dog">สุนัข</option><option value="Cat">แมว</option></select></div>
+            <div class="field"><label for="gender">เพศ</label><select id="gender" name="gender"><option value="">ไม่ระบุ</option><option value="M">ผู้</option><option value="F">เมีย</option></select></div>
           </div>
-          <div class="field"><label>สายพันธุ์</label><input name="breed" /></div>
-          <div class="grid g2" style="gap:10px">
-            <div class="field"><label>น้ำหนัก (kg) *</label><input name="weightKg" type="number" step="0.1" min="0.1" max="100" required /></div>
-            <div class="field"><label>วันเกิด</label><input name="birthDate" type="date" /></div>
+          <div class="field"><label for="breed">สายพันธุ์</label><input id="breed" name="breed"></div>
+          <div class="grid g2" style="gap:12px">
+            <div class="field"><label for="weightKg">น้ำหนัก (kg) *</label><input id="weightKg" name="weightKg" type="number" step="0.1" min="0.1" max="100" required></div>
+            <div class="field"><label for="birthDate">วันเกิด</label><input id="birthDate" name="birthDate" type="date"></div>
           </div>
-          <div class="field"><label>ข้อควรระวัง / โรคประจำตัว</label><textarea name="medicalNotes" rows="2"></textarea></div>
-          <div class="field"><label>ลิงก์รูปน้อง (ถ้ามี)</label><input name="photoURL" placeholder="https://..." /></div>
-          <button class="block">บันทึกโปรไฟล์น้อง</button>
+          <div class="field"><label for="medicalNotes">ข้อควรระวัง / โรคประจำตัว</label><textarea id="medicalNotes" name="medicalNotes" rows="3" placeholder="เช่น แพ้อาหารทะเล หรือขี้ตกใจ"></textarea></div>
+          <div class="field"><label for="photoFile">รูปน้อง (ถ้ามี)</label>
+            <div class="photo-picker" id="photoPicker">
+              <div class="photo-preview" id="photoPreview"></div>
+              <div class="photo-picker-copy"><b>ลากรูปมาวาง หรือเลือกจากเครื่อง</b><span class="muted small">JPG, PNG หรือ WEBP ไม่เกิน 10 MB</span>
+                <div class="row photo-actions"><label class="btn sm ghost" for="photoFile">เลือกรูป</label><button class="sm ghost hidden" type="button" id="photoClear">ลบรูป</button></div></div>
+              <input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only">
+              <input type="hidden" name="photoData" id="photoData">
+            </div>
+            <details class="photo-link"><summary>หรือใช้ลิงก์รูปจากเว็บ</summary><input id="photoURL" name="photoURL" type="url" placeholder="https://..."></details>
+            <div class="field-help">หากไม่ใส่ ระบบจะแสดงภาพสัญลักษณ์แทน</div></div>
+          <button class="block" type="submit">บันทึกโปรไฟล์น้อง</button>
         </form>
-      </aside>
-    </div>
+        </div>
+      </div>
+    </dialog>
   </main>
 
   <script src="js/common.js"></script>
   <script>
-    const SIZE_TH = { S: 'ไซซ์ S (< 5 kg)', M: 'ไซซ์ M (5-15 kg)', L: 'ไซซ์ L (> 15 kg)' };
+    const SIZE_TH = { S: 'ไซซ์ S', M: 'ไซซ์ M', L: 'ไซซ์ L' };
+    const addPet = document.getElementById('addPet');
+    document.getElementById('addPetArt').innerHTML = SERVICE_ART.pets;
+    // The add-pet form lives in a dialog: any "#addPet" link opens it; ✕, Esc or a backdrop click closes it
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('a[href="#addPet"]')) return;
+      e.preventDefault(); addPet.showModal(); document.getElementById('petName').focus();
+    });
+    document.getElementById('closeAddPet').onclick = () => addPet.close();
 
+    // Photo from the customer's device: shrink to 800px JPEG in the browser, send as base64 in photoData
+    const picker = document.getElementById('photoPicker'), photoFile = document.getElementById('photoFile');
+    function setPhoto(dataUrl) {
+      document.getElementById('photoData').value = dataUrl || '';
+      document.getElementById('photoPreview').innerHTML = dataUrl ? `<img src="${dataUrl}" alt="รูปน้องที่เลือก">` : SERVICE_ART.pets;
+      document.getElementById('photoClear').classList.toggle('hidden', !dataUrl);
+      picker.classList.toggle('has-photo', !!dataUrl);
+    }
+    async function readPhoto(file) {
+      if (!file) return;
+      if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return toast('รองรับเฉพาะไฟล์ JPG, PNG หรือ WEBP', 'error');
+      if (file.size > 10 * 1024 * 1024) return toast('ไฟล์ใหญ่เกิน 10 MB', 'error');
+      const img = await createImageBitmap(file).catch(() => null);
+      if (!img) return toast('อ่านไฟล์รูปไม่ได้', 'error');
+      const scale = Math.min(1, 800 / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale); canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      setPhoto(canvas.toDataURL('image/jpeg', .85));
+    }
+    photoFile.onchange = () => readPhoto(photoFile.files[0]);
+    document.getElementById('photoClear').onclick = () => { photoFile.value = ''; setPhoto(''); };
+    picker.addEventListener('dragover', (e) => { e.preventDefault(); picker.classList.add('dragging'); });
+    picker.addEventListener('dragleave', () => picker.classList.remove('dragging'));
+    picker.addEventListener('drop', (e) => { e.preventDefault(); picker.classList.remove('dragging'); readPhoto(e.dataTransfer.files[0]); });
+    setPhoto('');
+    addPet.addEventListener('click', (e) => { if (e.target === addPet) addPet.close(); });
     async function loadPets() {
-      const pets = await api('/api/pets');
       const box = document.getElementById('petList');
-      if (!pets.length) { box.innerHTML = '<div class="card empty">ยังไม่มีน้อง เพิ่มโปรไฟล์น้องทางด้านขวาได้เลย</div>'; return; }
-      box.innerHTML = pets.map((p) => `
-        <div class="card">
-          <div class="pet">
-            <div class="avatar">${p.PhotoURL ? `<img src="${esc(p.PhotoURL)}" alt="">` : petIcon(p.Species)}</div>
-            <div>
-              <h3 style="margin:0">${esc(p.PetName)}</h3>
-              <div class="muted small">${esc(p.Breed || (p.Species === 'Cat' ? 'แมว' : 'สุนัข'))}
-                ${p.Gender ? '· ' + (p.Gender === 'M' ? 'ผู้' : 'เมีย') : ''}</div>
-              <div class="small">${Number(p.WeightKg)} kg · <b>${SIZE_TH[p.WeightClass]}</b></div>
-            </div>
-          </div>
-          ${p.MedicalNotes ? `<div class="note">⚠️ ${esc(p.MedicalNotes)}</div>` : ''}
-          <div class="row" style="margin-top:12px"><a class="btn" href="book.html?pet=${p.PetID}">จองให้น้อง${esc(p.PetName)}</a></div>
-        </div>`).join('');
+      box.innerHTML = '<div class="card loading-state"><div class="spinner"></div></div>';
+      try {
+        const pets = await api('/api/pets');
+        if (!pets.length) {
+          box.innerHTML = `<div class="card empty" style="grid-column:1/-1"><div class="icon-box">${icon('care')}</div><h3>ยังไม่มีโปรไฟล์น้อง</h3><p>เพิ่มเพื่อนตัวโปรดคนแรก แล้วเริ่มเลือกบริการที่เหมาะกับเขาได้เลย</p><a class="btn" href="#addPet">เพิ่มน้องคนแรก</a></div>`;
+          return;
+        }
+        const cats = pets.filter((p) => p.Species === 'Cat').length;
+        const stat = (ico, n, label, cls) => `<span class="pet-stat ${cls}"><span class="pet-stat-ico">${icon(ico)}</span><b>${n}</b>${label}</span>`;
+        document.getElementById('petStats').innerHTML = stat('care', pets.length, 'น้องทั้งหมด', 'is-total') + (cats ? stat('cat', cats, 'แมว', 'is-cat') : '') + (pets.length - cats ? stat('dog', pets.length - cats, 'สุนัข', 'is-dog') : '');
+        box.innerHTML = pets.map((p) => `<article class="card pet-card card-hover">
+          <div class="pet">${petProfileImage(p, 'card')}
+          <div><span class="eyebrow" style="margin-bottom:5px">${p.Species === 'Cat' ? 'Cat profile' : 'Dog profile'}</span><h2 style="font-size:2rem;margin-bottom:4px">${esc(p.PetName)}</h2><div class="muted small">${esc(p.Breed || (p.Species === 'Cat' ? 'แมว' : 'สุนัข'))}</div></div></div>
+          <div class="pet-meta"><span>น้ำหนัก<b>${Number(p.WeightKg)} kg</b></span><span>ขนาดตัว<b>${SIZE_TH[p.WeightClass]}</b></span><span>เพศ<b>${p.Gender ? (p.Gender === 'M' ? 'ผู้' : 'เมีย') : 'ไม่ระบุ'}</b></span><span>วันเกิด<b>${p.BirthDate ? thDate(p.BirthDate) : 'ไม่ระบุ'}</b></span></div>
+          ${p.MedicalNotes ? `<div class="note">${icon('care')} ${esc(p.MedicalNotes)}</div>` : ''}
+          <div class="row" style="margin-top:16px"><a class="btn block btn-arrow" href="book.html?pet=${p.PetID}">จองบริการให้ ${esc(p.PetName)}</a></div>
+        </article>`).join('') + '<a class="pet-add-tile" href="#addPet"><span class="pet-add-plus" aria-hidden="true">+</span><b>เพิ่มน้องตัวใหม่</b><span class="muted small">สร้างโปรไฟล์ให้เพื่อนตัวใหม่</span></a>';
+      } catch (e) { box.innerHTML = errorHtml(e.message); throw e; }
     }
 
-    (async () => {
-      await requireCustomer('pets.html');
-      loadPets().catch((e) => toast(e.message, 'error'));
-    })();
-
+    (async () => { await requireCustomer('pets.html'); await loadPets(); })().catch((e) => { if (e.message !== 'not logged in') toast(e.message, 'error'); });
     document.getElementById('petForm').onsubmit = async (e) => {
-      e.preventDefault();
+      e.preventDefault(); const btn = e.target.querySelector('button[type=submit]'); btn.disabled = true;
       try {
         await api('/api/pets', { method: 'POST', body: Object.fromEntries(new FormData(e.target)) });
-        e.target.reset();
-        toast('เพิ่มน้องเรียบร้อย', 'ok');
-        loadPets();
-      } catch (err) { toast(err.message, 'error'); }
+        e.target.reset(); setPhoto(''); addPet.close(); toast('เพิ่มโปรไฟล์น้องเรียบร้อย', 'ok'); await loadPets();
+      } catch (err) { toast(err.message, 'error'); } finally { btn.disabled = false; }
     };
   </script>
 </body>

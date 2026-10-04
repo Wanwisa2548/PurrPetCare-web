@@ -1,83 +1,114 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PurrPet Care</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="PurrPetCare โรงแรมสัตว์เลี้ยง อาบน้ำ ตัดขน และบริการดูแลที่อบอุ่นเหมือนอยู่บ้าน">
+  <title>PurrPetCare — Pet Hotel, Grooming & Care</title>
+  <link rel="icon" type="image/png" href="/assets/pets/purrpetcare-logo-mark.png">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <main class="wrap">
-    <section class="hero">
-      <div>
-        <h1>โรงแรมสัตว์เลี้ยง &amp; อาบน้ำตัดขน ครบจบในที่เดียว</h1>
-        <p class="muted">ฝากน้องพักห้องสะอาดตามไซซ์ จองคิวอาบน้ำตัดขนพร้อมเลือกช่างได้เอง
-          คิดราคาตามน้ำหนักน้องแบบโปร่งใส และติดตามสถานะน้องได้ตลอดเวลา</p>
-        <div class="row" style="margin-top:14px">
-          <a class="btn" href="book.html">จองบริการเลย</a>
-          <a class="btn" style="background:var(--teal)" href="bookings.html">ติดตามสถานะน้อง</a>
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-media"><img src="assets/pets/purrpetcare-hero.jpg" alt="สุนัขโกลเด้นรีทรีฟเวอร์และแมวนั่งอย่างผ่อนคลายในบรรยากาศอบอุ่น"></div>
+      <div class="hero-content">
+        <div class="hero-copy">
+          <span class="eyebrow">Modern pet hospitality</span>
+          <h1 id="hero-title">CARE THEY DESERVE.<br><em>COMFORT THEY'LL LOVE.</em></h1>
+          <p>ห้องพักแสนสบาย กรูมมิ่งอย่างอ่อนโยน และการดูแลที่ออกแบบรอบความสุขของน้อง พร้อมให้คุณติดตามทุกช่วงเวลาสำคัญ</p>
+          <div class="hero-actions">
+            <a class="btn btn-lg btn-arrow" href="book.html">จองให้น้อง</a>
+            <a class="btn btn-lg ghost" href="#care">ดูบริการของเรา</a>
+          </div>
+          <div class="trust-row">
+            <span id="trust-clean"></span><span id="trust-db"></span><span id="trust-track"></span>
+          </div>
         </div>
       </div>
-      <div class="pic">🐶🛁🐱</div>
     </section>
 
-    <section class="grid g3" id="catalog"></section>
-
-    <section class="grid g2" id="authBox" style="margin-top:18px">
-      <div class="card" id="login">
-        <h2>เข้าสู่ระบบ</h2>
-        <form id="loginForm">
-          <div class="field"><label>อีเมล</label><input name="email" type="email" required /></div>
-          <div class="field"><label>รหัสผ่าน</label><input name="password" type="password" required /></div>
-          <button class="block">เข้าสู่ระบบ</button>
-          <p class="muted small">บัญชีทดลอง: aree@mail.com / รหัส 1234</p>
-        </form>
+    <section class="section section-soft" id="care">
+      <div class="section-inner">
+        <div class="section-title center"><span class="eyebrow">Our pet care</span><h2>ทุกสิ่งที่น้องต้องการ<br>ครบในที่เดียว</h2><p>ข้อมูลบริการและราคาเริ่มต้นด้านล่างโหลดจาก SQL Server โดยตรง</p></div>
+        <div class="grid g3" id="catalog" aria-live="polite"><div class="loading-state"><div class="spinner"></div></div></div>
       </div>
-      <div class="card">
-        <h2>สมัครสมาชิก</h2>
-        <form id="regForm">
-          <div class="field"><label>ชื่อ-นามสกุล</label><input name="fullName" required /></div>
-          <div class="grid g2" style="gap:10px">
-            <div class="field"><label>เบอร์โทร</label><input name="phone" placeholder="0812345678" required /></div>
-            <div class="field"><label>อีเมล</label><input name="email" type="email" required /></div>
+    </section>
+
+    <section class="editorial-split" id="experience">
+      <div class="editorial-copy">
+        <span class="eyebrow">The PurrPet experience</span>
+        <h2>CARE THAT<br>FEELS LIKE HOME.</h2>
+        <p>เราเชื่อว่าการดูแลที่ดีเริ่มจากการเข้าใจน้องแต่ละตัว ตั้งแต่น้ำหนัก นิสัย ไปจนถึงข้อควรระวังเฉพาะ เพื่อสร้างประสบการณ์ที่สบายใจทั้งน้องและเจ้าของ</p>
+        <div class="feature-list">
+          <div class="feature-item"><div class="icon-box art-box tone-hotel" id="feature-home"></div><div><h3>ห้องพักที่เหมาะกับน้อง</h3><p>ระบบเลือกห้องตามขนาดตัวและตรวจสอบวันว่างจริง</p></div></div>
+          <div class="feature-item"><div class="icon-box art-box tone-profile" id="feature-care"></div><div><h3>ดูแลเฉพาะบุคคล</h3><p>ทีมงานเห็นข้อมูลสำคัญและข้อควรระวังของน้องก่อนเริ่มบริการ</p></div></div>
+          <div class="feature-item"><div class="icon-box art-box tone-shield" id="feature-shield"></div><div><h3>มั่นใจในทุกขั้นตอน</h3><p>ทุกการจองยืนยันผ่าน transaction และกฎป้องกันคิวซ้อนในฐานข้อมูล</p></div></div>
+        </div>
+      </div>
+      <div class="editorial-media" role="img" aria-label="บรรยากาศการดูแลสัตว์เลี้ยงระดับพรีเมียม"></div>
+    </section>
+
+    <section class="section section-soft" id="stay">
+      <div class="section-inner">
+        <div class="section-title"><span class="eyebrow">Pet hotel</span><h2>พื้นที่สบายสำหรับ<br>เพื่อนตัวโปรด</h2><p>ห้อง S, M และ L จัดสรรตามน้ำหนักน้องอย่างเหมาะสม ราคาจริงและห้องว่างตรวจสอบจากระบบเมื่อเลือกวันเข้าพัก</p></div>
+        <div class="rooms-showcase" id="roomShowcase"><div class="loading-state"><div class="spinner"></div></div></div>
+      </div>
+    </section>
+
+    <section class="section" id="grooming">
+      <div class="section-inner tracking-preview">
+        <div class="section-title"><span class="eyebrow">Gentle grooming</span><h2>ดูดีขึ้น<br>รู้สึกดีขึ้น</h2><p>เลือกบริการและช่างในเวลาที่ว่างจริง ราคาจะปรับตามน้ำหนักของน้องด้วยฟังก์ชันใน SQL Server อย่างโปร่งใส</p><a class="btn btn-arrow" href="book.html">เลือกบริการกรูมมิ่ง</a></div>
+        <div class="grid g2" id="groomingShowcase"><div class="loading-state"><div class="spinner"></div></div></div>
+      </div>
+    </section>
+
+    <section class="section section-dark" id="tracking">
+      <div class="section-inner tracking-preview">
+        <div class="section-title"><span class="eyebrow">Live care journey</span><h2>STAY CLOSE,<br>EVEN WHEN YOU'RE APART.</h2><p>ติดตามสถานะจริงตั้งแต่ยืนยันการจอง เช็กอิน พักผ่อน รับบริการ จนพร้อมกลับบ้าน</p><a class="btn btn-arrow" href="bookings.html">ติดตามน้องของฉัน</a></div>
+        <div class="tracking-panel">
+          <div class="row"><div><span class="small" style="color:#a99d95">ตัวอย่างเส้นทางการดูแล</span><h3 style="color:#fff;margin:3px 0 0">น้องอยู่ในมือที่ไว้ใจได้</h3></div><span class="spacer"></span><span class="badge b-CheckedIn">กำลังดูแล</span></div>
+          <div class="tracker">
+            <div class="st done"><div class="dot" id="demo-check"></div>ยืนยันการจอง</div>
+            <div class="st done"><div class="dot" id="demo-home"></div>เช็กอิน</div>
+            <div class="st now"><div class="dot" id="demo-bath"></div>กรูมมิ่ง</div>
+            <div class="st"><div class="dot" id="demo-ready"></div>พร้อมกลับบ้าน</div>
           </div>
-          <div class="field"><label>รหัสผ่าน</label><input name="password" type="password" minlength="4" required /></div>
-          <button class="block teal">สมัครสมาชิก</button>
-        </form>
+        </div>
       </div>
     </section>
+
+    <section class="cta-band"><div class="section-inner"><h2>พร้อมมอบการดูแลที่<br><span class="keep-line">น้องคู่ควรแล้วหรือยัง?</span></h2><a class="btn btn-lg btn-dark btn-arrow" href="book.html">จองให้น้องวันนี้</a></div></section>
   </main>
 
   <script src="js/common.js"></script>
   <script>
-    (async () => {
-      const me = await renderTopbar('index.html');
-      if (me.customer) document.getElementById('authBox').classList.add('hidden');
+    const serviceDescriptions = { 'อาบน้ำ': 'อาบอย่างอ่อนโยนและเป่าขนอย่างพิถีพิถัน', 'ตัดขน': 'จัดทรงให้เหมาะกับสายพันธุ์และไลฟ์สไตล์', 'ตัดเล็บ': 'ดูแลเล็บสะอาดและปลอดภัย', 'สปาโคลน': 'การดูแลพิเศษเพื่อผิวและขนที่สุขภาพดี' };
+    function setIcon(id, name) { const el = document.getElementById(id); if (el) el.innerHTML = icon(name); }
+    [['feature-home','hotel'],['feature-care','profile'],['feature-shield','shield']].forEach(([id, k]) => (document.getElementById(id).innerHTML = SERVICE_ART[k]));
+    [['demo-check','confirm'],['demo-home','checkin'],['demo-bath','bath'],['demo-ready','gohome']].forEach(([id, k]) => (document.getElementById(id).innerHTML = SERVICE_ART[k]));
+    document.getElementById('trust-clean').innerHTML = icon('shield') + ' ห้องสะอาด ใส่ใจ';
+    document.getElementById('trust-db').innerHTML = icon('database') + ' ราคาและคิวจากระบบจริง';
+    document.getElementById('trust-track').innerHTML = icon('refresh') + ' ติดตามสถานะได้';
 
-      const cat = await api('/api/catalog').catch((e) => { toast(e.message, 'error'); return null; });
-      if (cat) {
-        document.getElementById('catalog').innerHTML = `
-          <div class="card"><h3>🛏️ ห้องพัก (ต่อคืน)</h3>${cat.roomTypes.map((r) =>
-            `<div class="summary-line"><span>${esc(r.TypeName)}</span><b>${baht(r.PricePerNight)}</b></div>`).join('')}</div>
-          <div class="card"><h3>🧼 อาบน้ำตัดขน (ราคาเริ่มต้น)</h3>${cat.services.map((s) =>
-            `<div class="summary-line"><span>${esc(s.ServiceName)} <span class="muted small">${s.DurationMin} นาที</span></span><b>${baht(s.BasePrice)}</b></div>`).join('')}
-            <p class="muted small" style="margin:.5em 0 0">น้ำหนัก 5-15 kg +20% · เกิน 15 kg +50%</p></div>
-          <div class="card"><h3>✨ บริการเสริม</h3>${cat.extras.map((x) =>
-            `<div class="summary-line"><span>${esc(x.ExtraName)}</span><b>${baht(x.Price)}/${esc(x.Unit)}</b></div>`).join('')}</div>`;
+    (async () => {
+      await renderTopbar('index.html');
+      try {
+        const cat = await api('/api/catalog');
+        document.getElementById('catalog').innerHTML = [
+          `<article class="card service-card card-hover">${serviceArtBox('hotel')}<h3 style="margin-top:22px">โรงแรมสัตว์เลี้ยง</h3><p>ห้องพักสะอาดตามขนาดตัว พร้อมระบบตรวจสอบห้องว่างจริง</p><div class="service-meta"><a href="#stay">ดูห้องพัก</a></div></article>`,
+          ...cat.services.slice(0, 4).map((s) => `<article class="card service-card card-hover">${serviceArtBox(s.ServiceName)}<h3 style="margin-top:22px">${esc(s.ServiceName)}</h3><p>${esc(serviceDescriptions[s.ServiceName] || 'บริการดูแลโดยทีมงานที่ใส่ใจน้องทุกตัว')}</p><div class="service-meta row"><span class="muted small">${s.DurationMin} นาที</span><span class="spacer"></span><b>เริ่ม ${baht(s.BasePrice)}</b></div></article>`),
+          `<article class="card service-card card-hover">${serviceArtBox('care')}<h3 style="margin-top:22px">บริการดูแลเสริม</h3><p>อาหาร พาเดินเล่น และการดูแลพิเศษที่เลือกได้ตามต้องการ</p><div class="service-meta"><a href="book.html">เลือกบริการ</a></div></article>`
+        ].join('');
+        document.getElementById('roomShowcase').innerHTML = cat.roomTypes.map((r) => `<article class="room-type card-hover"><div class="room-art"><div class="icon-box art-box tone-room${esc(r.RoomSize)}">${SERVICE_ART['room' + r.RoomSize] || icon('bed')}</div><span class="room-letter">${esc(r.RoomSize)}</span></div><h3>${esc(r.TypeName)}</h3><p class="muted">รองรับน้ำหนักสูงสุด ${Number(r.MaxWeightKg)} kg</p><div class="price">${baht(r.PricePerNight)} / คืน</div></article>`).join('');
+        document.getElementById('groomingShowcase').innerHTML = cat.services.map((s) => `<article class="card card-hover"><div class="row">${serviceArtBox(s.ServiceName)}<span class="spacer"></span><b>${baht(s.BasePrice)}</b></div><h3 style="margin-top:18px">${esc(s.ServiceName)}</h3><p class="muted small">ระยะเวลาโดยประมาณ ${s.DurationMin} นาที</p></article>`).join('');
+      } catch (e) {
+        document.getElementById('catalog').innerHTML = errorHtml(e.message);
+        document.getElementById('roomShowcase').innerHTML = errorHtml(e.message);
+        document.getElementById('groomingShowcase').innerHTML = errorHtml(e.message);
       }
     })();
 
-    const formData = (f) => Object.fromEntries(new FormData(f));
-    document.getElementById('loginForm').onsubmit = async (e) => {
-      e.preventDefault();
-      try { await api('/api/auth/login', { method: 'POST', body: formData(e.target) }); location.href = 'pets.html'; }
-      catch (err) { toast(err.message, 'error'); }
-    };
-    document.getElementById('regForm').onsubmit = async (e) => {
-      e.preventDefault();
-      try { await api('/api/auth/register', { method: 'POST', body: formData(e.target) }); location.href = 'pets.html'; }
-      catch (err) { toast(err.message, 'error'); }
-    };
   </script>
 </body>
 </html>

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="เข้าสู่ระบบลูกค้า PurrPetCare เพื่อจัดการข้อมูลน้องและการจองบริการ">
+  <title>เข้าสู่ระบบลูกค้า — PurrPetCare</title>
+  <link rel="icon" type="image/png" href="/assets/pets/purrpetcare-logo-mark.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-page-body customer-login-page">
+  <main class="login-page-shell">
+    <section class="customer-login-visual" aria-label="PurrPetCare Pet Hotel">
+      <img class="login-visual-image" src="/assets/pets/purrpetcare-hero.jpg" alt="สุนัขและแมวในบรรยากาศอบอุ่นของ PurrPetCare">
+      <a class="login-brand-link" href="index.html" aria-label="PurrPetCare หน้าหลัก"><span data-brand-lockup="hero"></span></a>
+      <div class="login-visual-copy">
+        <span class="eyebrow">A warm welcome home</span>
+        <h1>CARE CONTINUES,<br>WHEREVER YOU ARE.</h1>
+        <p>กลับมาติดตามทุกช่วงเวลาสำคัญ และเลือกการดูแลที่เหมาะกับเพื่อนตัวโปรดของคุณ</p>
+      </div>
+    </section>
+
+    <section class="customer-login-panel" aria-labelledby="customer-login-title">
+      <div class="login-panel-inner">
+        <a class="login-back-link" href="index.html">← กลับหน้าหลัก</a>
+        <div class="login-tabs" role="tablist" aria-label="บัญชีลูกค้า">
+          <button id="loginTab" class="on" type="button" role="tab" aria-selected="true" aria-controls="customerLoginPanel">เข้าสู่ระบบ</button>
+          <button id="registerTab" type="button" role="tab" aria-selected="false" aria-controls="customerRegisterPanel">สมัครสมาชิก</button>
+        </div>
+
+        <div id="customerLoginPanel" class="login-form-panel" role="tabpanel" aria-labelledby="loginTab">
+          <span class="eyebrow">Customer login</span>
+          <h2 id="customer-login-title">ยินดีต้อนรับกลับ</h2>
+          <p class="muted">เข้าสู่ระบบเพื่อดูข้อมูลน้อง การจอง และสถานะการดูแล</p>
+          <form id="customerLoginForm" class="login-form">
+            <div class="field"><label for="customerEmail">อีเมล</label><input id="customerEmail" name="email" type="email" autocomplete="email" required></div>
+            <div class="field"><label for="customerPassword">รหัสผ่าน</label><div class="password-control"><input id="customerPassword" name="password" type="password" autocomplete="current-password" required><button type="button" data-password-toggle="customerPassword" aria-label="แสดงรหัสผ่าน">แสดง</button></div></div>
+            <p class="form-error" id="customerLoginError" role="alert" aria-live="polite"></p>
+            <button class="block login-submit" type="submit" data-idle-label="เข้าสู่ระบบ" data-loading-label="กำลังเข้าสู่ระบบ...">เข้าสู่ระบบ</button>
+          </form>
+        </div>
+
+        <div id="customerRegisterPanel" class="login-form-panel hidden" role="tabpanel" aria-labelledby="registerTab">
+          <span class="eyebrow">Join PurrPetCare</span>
+          <h2>สร้างบัญชีของคุณ</h2>
+          <p class="muted">เก็บข้อมูลน้องและจองบริการทั้งหมดไว้ในที่เดียว</p>
+          <form id="customerRegisterForm" class="login-form">
+            <div class="field"><label for="registerName">ชื่อ-นามสกุล</label><input id="registerName" name="fullName" autocomplete="name" required></div>
+            <div class="login-field-row"><div class="field"><label for="registerPhone">เบอร์โทร</label><input id="registerPhone" name="phone" inputmode="numeric" autocomplete="tel" placeholder="0812345678" required></div><div class="field"><label for="registerEmail">อีเมล</label><input id="registerEmail" name="email" type="email" autocomplete="email" required></div></div>
+            <div class="field"><label for="registerPassword">รหัสผ่าน</label><div class="password-control"><input id="registerPassword" name="password" type="password" minlength="4" autocomplete="new-password" required><button type="button" data-password-toggle="registerPassword" aria-label="แสดงรหัสผ่าน">แสดง</button></div><div class="field-help">อย่างน้อย 4 ตัวอักษร</div></div>
+            <p class="form-error" id="customerRegisterError" role="alert" aria-live="polite"></p>
+            <button class="block login-submit" type="submit" data-idle-label="สร้างบัญชี PurrPetCare" data-loading-label="กำลังสร้างบัญชี...">สร้างบัญชี PurrPetCare</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script>
+    const byId = (id) => document.getElementById(id);
+    const formBody = (form) => Object.fromEntries(new FormData(form));
+    function setPanel(register) {
+      byId('customerLoginPanel').classList.toggle('hidden', register);
+      byId('customerRegisterPanel').classList.toggle('hidden', !register);
+      byId('loginTab').classList.toggle('on', !register);
+      byId('registerTab').classList.toggle('on', register);
+      byId('loginTab').setAttribute('aria-selected', String(!register));
+      byId('registerTab').setAttribute('aria-selected', String(register));
+      (register ? byId('registerName') : byId('customerEmail')).focus();
+    }
+    function setPending(form, pending) {
+      const button = form.querySelector('[type="submit"]');
+      button.disabled = pending;
+      button.innerHTML = pending ? `<span class="button-spinner" aria-hidden="true"></span>${button.dataset.loadingLabel}` : button.dataset.idleLabel;
+    }
+    async function submitCustomer(form, endpoint, errorId) {
+      const error = byId(errorId);
+      error.textContent = '';
+      setPending(form, true);
+      try {
+        await api(endpoint, { method: 'POST', body: formBody(form) });
+        const button = form.querySelector('[type="submit"]');
+        button.textContent = '✓ เข้าสู่ระบบสำเร็จ';
+        location.href = 'index.html';
+      } catch (err) {
+        error.textContent = err.message;
+        setPending(form, false);
+      }
+    }
+    byId('loginTab').onclick = () => setPanel(false);
+    byId('registerTab').onclick = () => setPanel(true);
+    byId('customerLoginForm').onsubmit = (event) => { event.preventDefault(); submitCustomer(event.currentTarget, '/api/auth/login', 'customerLoginError'); };
+    byId('customerRegisterForm').onsubmit = (event) => { event.preventDefault(); submitCustomer(event.currentTarget, '/api/auth/register', 'customerRegisterError'); };
+    bindPasswordToggles();
+    api('/api/auth/me').then((me) => { if (me.admin) location.replace('admin.html'); else if (me.customer) location.replace('index.html'); }).catch(() => {});
+  </script>
+</body>
+</html>

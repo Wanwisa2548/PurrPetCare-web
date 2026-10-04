@@ -5,7 +5,7 @@ const session = require('express-session');
 const { friendlyError } = require('./db');
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '3mb' })); // pet photos arrive as base64 in the add-pet request
 app.use(
   session({
     secret: process.env.SESSION_SECRET || 'purrpet-dev-secret',
