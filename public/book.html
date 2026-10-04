@@ -10,44 +10,46 @@
 <body>
   <main class="wrap page-shell">
     <header class="page-head"><div><span class="eyebrow">Book their care</span><h1>จองบริการ</h1><p class="muted">เลือกการดูแลที่เหมาะกับน้อง ระบบจะตรวจสอบห้องว่าง คิวช่าง และคำนวณราคาจริงให้คุณ</p></div></header>
-    <div class="booking-progress" aria-label="ขั้นตอนการจอง"><div class="active" data-step="01">น้อง</div><div class="active" data-step="02">ห้องพัก</div><div class="active" data-step="03">กรูมมิ่ง</div><div class="active" data-step="04">บริการเสริม</div><div class="active" data-step="05">ตรวจสอบ</div></div>
+    <nav class="booking-progress" aria-label="ขั้นตอนการจอง"><a href="#step-pet" data-art="pets"><span class="bp-dot"><span class="bp-num">01</span></span><span class="bp-label">น้อง</span></a><a href="#step-room" data-art="hotel"><span class="bp-dot"><span class="bp-num">02</span></span><span class="bp-label">ห้องพัก</span></a><a href="#step-groom" data-art="scissors"><span class="bp-dot"><span class="bp-num">03</span></span><span class="bp-label">กรูมมิ่ง</span></a><a href="#step-extra" data-art="care"><span class="bp-dot"><span class="bp-num">04</span></span><span class="bp-label">บริการเสริม</span></a><a href="#step-review" data-art="confirm"><span class="bp-dot"><span class="bp-num">05</span></span><span class="bp-label">ตรวจสอบ</span></a></nav>
     <div class="split">
       <section>
-        <article class="card wizard-card">
+        <article class="card wizard-card" id="step-pet">
           <div class="step-title"><span class="step-num">01</span><div><h2 style="font-size:1.7rem;margin:0">เลือกน้อง</h2><span class="muted small">เราจะใช้ข้อมูลน้ำหนักเพื่อแนะนำห้องและคำนวณราคา</span></div></div>
           <div class="choices" id="petChoices" style="margin-top:18px"><div class="loading-state"><div class="spinner"></div></div></div>
         </article>
 
-        <article class="card wizard-card">
-          <div class="step-title"><span class="step-num">02</span><div><h2 style="font-size:1.7rem;margin:0">เลือกห้องพัก</h2><span class="muted small">ค้นหาห้องว่างตามวันที่จริง</span></div><span class="spacer"></span><label class="row" style="margin:0"><input type="checkbox" id="wantRoom" checked> ต้องการฝากพัก</label></div>
+        <article class="card wizard-card" id="step-room">
+          <div class="step-title"><span class="step-num">02</span><div><h2 style="font-size:1.7rem;margin:0">เลือกห้องพัก</h2><span class="muted small">ค้นหาห้องว่างตามวันที่จริง</span></div><span class="spacer"></span><label class="stay-toggle" for="wantRoom"><span class="stay-toggle-copy"><b>ต้องการฝากพัก</b><small id="wantRoomHint">รวมห้องพักในการจองนี้</small></span><input type="checkbox" id="wantRoom" role="switch" checked><span class="switch" aria-hidden="true"></span></label></div>
           <div id="roomBox" style="margin-top:18px">
             <div class="grid g3" style="gap:12px;align-items:end"><div><label for="checkIn">วันเช็กอิน</label><input type="date" id="checkIn"></div><div><label for="checkOut">วันเช็กเอาต์</label><input type="date" id="checkOut"></div><div><button type="button" class="ghost block" id="findRooms">ค้นหาห้องว่าง</button></div></div>
-            <div class="choices" id="roomChoices" style="margin-top:14px"><div class="muted small">เลือกน้องและวันที่ แล้วกดค้นหาห้องว่าง</div></div>
+            <div class="choices room-choices" id="roomChoices" style="margin-top:16px"><div class="muted small">เลือกน้องและวันที่ แล้วกดค้นหาห้องว่าง</div></div>
           </div>
         </article>
 
-        <article class="card wizard-card">
+        <article class="card wizard-card" id="step-groom">
           <div class="step-title"><span class="step-num">03</span><div><h2 style="font-size:1.7rem;margin:0">กรูมมิ่ง</h2><span class="muted small">ราคาเฉพาะน้องคำนวณจาก SQL Server</span></div></div>
-          <div class="db-proof"> <span id="priceDbIcon"></span><span>booking.fn_CalculateGroomingPrice เป็นผู้คำนวณราคาตามน้ำหนัก บริการที่เลือกจะต่อกันตามลำดับ</span></div>
+          <div class="db-proof hidden"> <span id="priceDbIcon"></span><span>booking.fn_CalculateGroomingPrice เป็นผู้คำนวณราคาตามน้ำหนัก บริการที่เลือกจะต่อกันตามลำดับ</span></div>
           <div class="choices" id="serviceChoices" style="margin-top:16px"><div class="muted small">เลือกน้องก่อนเพื่อดูราคา</div></div>
           <div id="slotBox" class="hidden" style="margin-top:18px">
             <div class="grid g3" style="gap:12px;align-items:end"><div><label for="groomDate">วันที่</label><input type="date" id="groomDate"></div><div><label for="groomTime">เวลาเริ่ม</label><select id="groomTime"></select></div><div><button type="button" class="ghost block" id="findGroomers">ค้นหาช่างว่าง</button></div></div>
-            <div class="choices" id="groomerChoices" style="margin-top:14px"><div class="muted small">เลือกบริการและเวลา แล้วกดค้นหาช่างว่าง</div></div>
+            <div class="choices groomer-choices" id="groomerChoices" style="margin-top:16px"><div class="muted small">เลือกบริการและเวลา แล้วกดค้นหาช่างว่าง</div></div>
           </div>
         </article>
 
-        <article class="card wizard-card">
+        <article class="card wizard-card" id="step-extra">
           <div class="step-title"><span class="step-num">04</span><div><h2 style="font-size:1.7rem;margin:0">บริการดูแลเสริม</h2><span class="muted small">เพิ่มสิ่งที่น้องต้องการระหว่างเข้าพัก</span></div></div>
           <div class="grid g3" id="extraBox" style="margin-top:18px;gap:12px"></div>
           <div class="field" style="margin-top:18px"><label for="note">หมายเหตุถึงทีมดูแล</label><textarea id="note" maxlength="300" placeholder="นิสัย สิ่งที่ชอบ หรือรายละเอียดที่อยากให้ทีมงานทราบ"></textarea></div>
         </article>
       </section>
 
-      <aside class="card sticky booking-summary">
-        <span class="eyebrow">Step 05</span><h2 style="font-size:2rem">สรุปการจอง</h2>
+      <aside class="card sticky booking-summary" id="step-review">
+        <div class="summary-head step-title"><span class="step-num">05</span><div><h2>สรุปการจอง</h2><span class="small">ตรวจสอบรายการก่อนยืนยัน</span></div></div>
+        <div class="summary-body">
         <div id="summary" aria-live="polite"><div class="muted">เริ่มจากเลือกน้องทางซ้าย</div></div>
-        <button class="block" id="confirmBtn" type="button" style="margin-top:18px">ยืนยันการจอง</button>
-        <div class="db-proof"><span id="bookingDbIcon"></span><span>ระบบตรวจห้องและคิวอีกครั้ง พร้อมบันทึกทั้งหมดด้วย Stored Procedure + Transaction เดียว</span></div>
+        <button class="block" id="confirmBtn" type="button">ยืนยันการจอง</button>
+        <div class="db-proof hidden"><span id="bookingDbIcon"></span><span>ระบบตรวจห้องและคิวอีกครั้ง พร้อมบันทึกทั้งหมดด้วย Stored Procedure + Transaction เดียว</span></div>
+        </div>
       </aside>
     </div>
   </main>
@@ -58,6 +60,30 @@
     document.getElementById('bookingDbIcon').innerHTML = icon('shield');
     const S = { pets: [], petId: null, rooms: [], roomId: null, prices: [], picked: new Set(), groomers: [], staffId: null, extras: [], qty: {} };
     const $ = (id) => document.getElementById(id);
+    const progressLinks = [...document.querySelectorAll('.booking-progress a')];
+    progressLinks.forEach((a) => a.querySelector('.bp-dot').insertAdjacentHTML('afterbegin', SERVICE_ART[a.dataset.art]));
+    // The highlighted step follows what the customer is doing: finishing a step moves on to the next open one,
+    // and touching a card (or its step in the bar) makes that step current. Scrolling alone never changes it.
+    let currentStep = 0, prevDone = [];
+    function stepsDone() {
+      return [!!S.petId, !$('wantRoom').checked || !!S.roomId, S.picked.size > 0 && !!S.staffId, Object.values(S.qty).some((q) => q > 0) || !!$('note').value.trim(), false];
+    }
+    const nextOpenStep = (done) => { const i = done.findIndex((d, k) => k < 4 && !d); return i === -1 ? 4 : i; };
+    function setCurrentStep(cur) {
+      currentStep = cur;
+      progressLinks.forEach((a, i) => { a.classList.toggle('now', i === cur); document.querySelector(a.hash).classList.toggle('is-current', i === cur); i === cur ? a.setAttribute('aria-current', 'step') : a.removeAttribute('aria-current'); });
+    }
+    function renderProgress() {
+      const done = stepsDone();
+      progressLinks.forEach((a, i) => { a.classList.toggle('done', done[i]); document.querySelector(a.hash).classList.toggle('is-done', done[i]); });
+      if (done[currentStep] && !prevDone[currentStep]) setCurrentStep(nextOpenStep(done));
+      prevDone = done;
+    }
+    progressLinks.forEach((a, i) => {
+      a.addEventListener('click', () => setCurrentStep(i));
+      // Capture phase so the step is current before the card's own handlers mark it done and advance
+      for (const type of ['pointerdown', 'focusin']) document.querySelector(a.hash).addEventListener(type, () => { if (currentStep !== i) { setCurrentStep(i); prevDone[i] = stepsDone()[i]; } }, true);
+    });
 
     for (let m = 9 * 60; m <= 17 * 60; m += 30) { const t = `${String(Math.floor(m / 60)).padStart(2,'0')}:${String(m % 60).padStart(2,'0')}`; $('groomTime').insertAdjacentHTML('beforeend', `<option>${t}</option>`); }
     const today = ymd(new Date()); $('checkIn').value = today; $('checkIn').min = today; $('checkOut').value = addDays(today,1); $('checkOut').min = addDays(today,1); $('groomDate').value = addDays(today,1); $('groomDate').min = today;
@@ -69,7 +95,7 @@
     const totalMinutes = () => pickedServices().reduce((a,s) => a + s.DurationMin,0);
 
     function renderPets() {
-      $('petChoices').innerHTML = S.pets.length ? S.pets.map((p) => `<button type="button" class="choice ${p.PetID === S.petId ? 'on' : ''}" data-id="${p.PetID}"><span class="icon-box" style="width:44px;height:44px">${petIcon(p.Species)}</span><span><b>${esc(p.PetName)}</b><span class="muted small" style="display:block">${Number(p.WeightKg)} kg · ไซซ์ ${p.WeightClass}</span></span></button>`).join('') : `<div class="empty" style="grid-column:1/-1"><div class="icon-box">${icon('care')}</div><p>ยังไม่มีโปรไฟล์น้อง</p><a class="btn" href="pets.html">เพิ่มโปรไฟล์น้อง</a></div>`;
+      $('petChoices').innerHTML = S.pets.length ? S.pets.map((p) => `<button type="button" class="choice ${p.PetID === S.petId ? 'on' : ''}" data-id="${p.PetID}">${petProfileImage(p, 'choice')}<span><b>${esc(p.PetName)}</b><span class="muted small" style="display:block">${Number(p.WeightKg)} kg · ไซซ์ ${p.WeightClass}</span></span></button>`).join('') : `<div class="empty" style="grid-column:1/-1"><div class="icon-box">${icon('care')}</div><p>ยังไม่มีโปรไฟล์น้อง</p><a class="btn" href="pets.html">เพิ่มโปรไฟล์น้อง</a></div>`;
       $('petChoices').querySelectorAll('.choice').forEach((el) => (el.onclick = () => selectPet(Number(el.dataset.id))));
     }
     async function selectPet(id) {
@@ -79,16 +105,30 @@
       catch (e) { $('serviceChoices').innerHTML = errorHtml(e.message); toast(e.message,'error'); }
     }
     function renderRooms() {
-      $('roomChoices').innerHTML = S.rooms.length ? S.rooms.map((r) => `<button type="button" class="choice ${r.RoomID === S.roomId ? 'on' : ''}" data-id="${r.RoomID}"><span class="icon-box" style="width:44px;height:44px">${icon('bed')}</span><span><b>ห้อง ${esc(r.RoomNo)}</b><span class="muted small" style="display:block">${esc(r.TypeName)}</span></span><span class="price">${baht(r.PricePerNight)}</span></button>`).join('') : '<div class="muted small">เลือกน้องและวันที่ แล้วกดค้นหาห้องว่าง</div>';
+      const n = nights(), p = pet();
+      $('roomChoices').innerHTML = S.rooms.length ? S.rooms.map((r) => {
+        const [, name = r.TypeName, weight = ''] = /^(.*?)\s*\((.*)\)\s*$/.exec(r.TypeName) || [];
+        return `<button type="button" class="choice room-pick ${r.RoomID === S.roomId ? 'on' : ''}" data-id="${r.RoomID}" aria-pressed="${r.RoomID === S.roomId}">
+          <span class="room-pick-head"><span class="room-size size-${esc(r.RoomSize)}" aria-label="ไซซ์ ${esc(r.RoomSize)}">${esc(r.RoomSize)}</span><span class="room-pick-check" aria-hidden="true">✓</span></span>
+          <span class="room-pick-copy"><b>ห้อง ${esc(r.RoomNo)}</b><span>${esc(name)}</span></span>
+          <span class="room-pick-tags">${weight ? `<span class="room-tag">${esc(weight)}</span>` : ''}${p && p.WeightClass === r.RoomSize ? '<span class="room-tag fit">เหมาะกับน้อง</span>' : ''}</span>
+          <span class="room-pick-price"><b>${baht(r.PricePerNight)}</b><small>/ คืน</small>${n > 1 ? `<span>รวม ${n} คืน ${baht(n * r.PricePerNight)}</span>` : ''}</span>
+        </button>`; }).join('') : '<div class="muted small">เลือกน้องและวันที่ แล้วกดค้นหาห้องว่าง</div>';
       $('roomChoices').querySelectorAll('.choice').forEach((el) => (el.onclick = () => { S.roomId = Number(el.dataset.id); renderRooms(); renderSummary(); }));
     }
     function renderServices() {
-      $('serviceChoices').innerHTML = S.prices.map((s) => `<label class="choice ${S.picked.has(s.ServiceID) ? 'on' : ''}" style="margin:0"><input type="checkbox" data-id="${s.ServiceID}" ${S.picked.has(s.ServiceID) ? 'checked' : ''}><span class="icon-box" style="width:40px;height:40px">${serviceIcon(s.ServiceName)}</span><span><b>${esc(s.ServiceName)}</b><span class="muted small" style="display:block">${s.DurationMin} นาที ${Number(s.Price) !== Number(s.BasePrice) ? `· <s>${baht(s.BasePrice)}</s>` : ''}</span></span><span class="price">${baht(s.Price)}</span></label>`).join('') || '<div class="muted">เลือกน้องก่อน</div>';
+      $('serviceChoices').innerHTML = S.prices.map((s) => `<label class="choice ${S.picked.has(s.ServiceID) ? 'on' : ''}" style="margin:0"><input type="checkbox" data-id="${s.ServiceID}" ${S.picked.has(s.ServiceID) ? 'checked' : ''}>${serviceArtBox(s.ServiceName, 'span')}<span><b>${esc(s.ServiceName)}</b><span class="muted small" style="display:block">${s.DurationMin} นาที</span></span><span class="price">${baht(s.Price)}${Number(s.Price) !== Number(s.BasePrice) ? `<s class="muted small">${baht(s.BasePrice)}</s>` : ''}</span></label>`).join('') || '<div class="muted">เลือกน้องก่อน</div>';
       $('serviceChoices').querySelectorAll('input').forEach((el) => (el.onchange = () => { const id = Number(el.dataset.id); el.checked ? S.picked.add(id) : S.picked.delete(id); S.groomers = []; S.staffId = null; renderServices(); renderGroomers(); renderSummary(); }));
       $('slotBox').classList.toggle('hidden', S.picked.size === 0);
     }
     function renderGroomers() {
-      $('groomerChoices').innerHTML = S.groomers.length ? S.groomers.map((g) => `<button type="button" class="choice ${g.StaffID === S.staffId ? 'on' : ''}" data-id="${g.StaffID}"><span class="icon-box" style="width:40px;height:40px">${icon('scissors')}</span><b>${esc(g.FullName)}</b></button>`).join('') : '<div class="muted small">เลือกบริการและเวลา แล้วกดค้นหาช่างว่าง</div>';
+      const plan = serviceSchedule(), minutes = pickedServices().reduce((sum, s) => sum + s.DurationMin, 0);
+      const endAt = plan.length ? (([h, m]) => { const t = h * 60 + m + minutes; return `${String(Math.floor(t / 60) % 24).padStart(2,'0')}:${String(t % 60).padStart(2,'0')}`; })(plan[0].label.split(':').map(Number)) : '';
+      $('groomerChoices').innerHTML = S.groomers.length ? S.groomers.map((g) => `<button type="button" class="choice groomer-pick ${g.StaffID === S.staffId ? 'on' : ''}" data-id="${g.StaffID}" aria-pressed="${g.StaffID === S.staffId}">
+          <span class="groomer-avatar" aria-hidden="true">${groomerAvatar(g.StaffID)}</span>
+          <span class="groomer-copy"><b>${esc(g.FullName)}</b><span>ช่างกรูมมิ่ง <span class="groomer-free">ว่าง</span></span>${plan.length ? `<span class="groomer-time">${icon('calendar')} ${plan[0].label}–${endAt} น.</span>` : ''}</span>
+          <span class="room-pick-check" aria-hidden="true">✓</span>
+        </button>`).join('') : '<div class="muted small">เลือกบริการและเวลา แล้วกดค้นหาช่างว่าง</div>';
       $('groomerChoices').querySelectorAll('.choice').forEach((el) => (el.onclick = () => { S.staffId = Number(el.dataset.id); renderGroomers(); renderSummary(); }));
     }
     function renderExtras() {
@@ -99,16 +139,27 @@
       let [h,m] = $('groomTime').value.split(':').map(Number), cur = h * 60 + m;
       return pickedServices().map((s) => { const hh = String(Math.floor(cur / 60)).padStart(2,'0'), mm = String(cur % 60).padStart(2,'0'); const item = { serviceId:s.ServiceID,name:s.ServiceName,price:Number(s.Price),startTime:`${$('groomDate').value}T${hh}:${mm}`,label:`${hh}:${mm}` }; cur += s.DurationMin; return item; });
     }
+    // Summary as a timeline of the stay: check-in → grooming in time order → extras → check-out
     function renderSummary() {
-      const lines = []; let total = 0; const p = pet();
-      if (p) lines.push(`<div class="summary-line"><span class="row">${petIcon(p.Species)} <b>${esc(p.PetName)}</b></span><span class="muted">${Number(p.WeightKg)} kg</span></div>`);
-      if ($('wantRoom').checked && room()) { const n = nights(), sub = n * Number(room().PricePerNight); total += sub; lines.push(`<div class="summary-line"><span>ห้อง ${esc(room().RoomNo)} × ${n} คืน<br><span class="muted small">${thDate($('checkIn').value)} – ${thDate($('checkOut').value)}</span></span><b>${baht(sub)}</b></div>`); }
-      if (S.picked.size) { for (const s of serviceSchedule()) { total += s.price; lines.push(`<div class="summary-line"><span>${esc(s.name)} <span class="muted small">${s.label} น.</span></span><b>${baht(s.price)}</b></div>`); } const g = S.groomers.find((x) => x.StaffID === S.staffId); lines.push(`<div class="summary-line muted small"><span>ช่าง</span><span>${g ? esc(g.FullName) : 'ยังไม่ได้เลือก'}</span></div>`); }
-      for (const x of S.extras) { const q = S.qty[x.ExtraID] || 0; if (q > 0) { total += q * Number(x.Price); lines.push(`<div class="summary-line"><span>${esc(x.ExtraName)} × ${q}</span><b>${baht(q * x.Price)}</b></div>`); } }
-      $('summary').innerHTML = (lines.join('') || '<div class="muted">เริ่มจากเลือกน้องทางซ้าย</div>') + `<div class="summary-line summary-total"><span>ยอดประมาณการ</span><span>${baht(total)}</span></div><p class="muted small">ยอดสุดท้ายยืนยันโดยฐานข้อมูลเมื่อจองสำเร็จ</p>`;
+      renderProgress();
+      let total = 0; const p = pet(), steps = [];
+      const step = (art, when, title, sub, price, cls = '') => steps.push(`<li class="tl-item ${cls}"><span class="icon-box art-box tone-${art}">${SERVICE_ART[art]}</span><div class="tl-body"><div class="tl-top">${when ? `<span class="tl-when">${when}</span>` : ''}${price != null ? `<b class="tl-price">${baht(price)}</b>` : ''}</div><b class="tl-title">${title}</b>${sub ? `<span class="tl-sub">${sub}</span>` : ''}</div></li>`);
+      const stay = $('wantRoom').checked && room();
+      if (stay) { const n = nights(), sub = n * Number(room().PricePerNight); total += sub; step('checkin', thDate($('checkIn').value), 'เช็กอิน · ห้อง ' + esc(room().RoomNo), `${esc(room().TypeName)} × ${n} คืน`, sub); }
+      if (S.picked.size) {
+        const g = S.groomers.find((x) => x.StaffID === S.staffId);
+        for (const sv of serviceSchedule()) { total += sv.price; step(serviceArtKey(sv.name), `${sv.label} น.`, esc(sv.name), g ? `ช่าง${esc(g.FullName)}` : '', sv.price); }
+        if (!g) steps.push('<li class="tl-alert">⚠ ยังไม่ได้เลือกช่าง กดค้นหาช่างว่างในขั้นกรูมมิ่ง</li>');
+      }
+      for (const x of S.extras) { const q = S.qty[x.ExtraID] || 0; if (q > 0) { total += q * Number(x.Price); step(serviceArtKey(x.ExtraName), stay ? 'ระหว่างเข้าพัก' : '', `${esc(x.ExtraName)} × ${q}`, x.Unit ? `${baht(x.Price)} / ${esc(x.Unit)}` : '', q * x.Price); } }
+      if (stay) step('gohome', thDate($('checkOut').value), 'เช็กเอาต์ กลับบ้าน', 'รับน้องกลับบ้านพร้อมความสดชื่น', null, 'tl-end');
+      const petCard = p ? `<div class="summary-pet">${petProfileImage(p, 'summary')}<div><b>${esc(p.PetName)}</b><span>${Number(p.WeightKg)} kg${p.WeightClass ? ` · ไซซ์ ${esc(p.WeightClass)}` : ''}</span></div></div>` : '';
+      const body = steps.length ? `<ol class="summary-timeline">${steps.join('')}</ol>`
+        : `<div class="summary-empty">${serviceArtBox(p ? 'confirm' : 'pets')}<span>${p ? 'เลือกห้องพักหรือบริการ แล้วรายการจะเรียงเป็นไทม์ไลน์ที่นี่' : 'เริ่มจากเลือกน้องทางซ้าย'}</span></div>`;
+      $('summary').innerHTML = petCard + body + `<div class="summary-total"><div><span>ยอดประมาณการ</span><p class="muted small">ยอดสุดท้ายยืนยันโดยฐานข้อมูลเมื่อจองสำเร็จ</p></div><strong>${baht(total)}</strong></div>`;
     }
 
-    $('wantRoom').onchange = () => { $('roomBox').classList.toggle('hidden',!$('wantRoom').checked); renderSummary(); };
+    $('wantRoom').onchange = () => { $('roomBox').classList.toggle('hidden',!$('wantRoom').checked); $('wantRoomHint').textContent = $('wantRoom').checked ? 'รวมห้องพักในการจองนี้' : 'ใช้บริการกรูมมิ่งอย่างเดียว'; renderSummary(); };
     for (const id of ['checkIn','checkOut']) $(id).onchange = () => { if ($('checkOut').value <= $('checkIn').value) $('checkOut').value = addDays($('checkIn').value,1); $('checkOut').min = addDays($('checkIn').value,1); S.rooms = []; S.roomId = null; renderRooms(); renderSummary(); };
     for (const id of ['groomDate','groomTime']) $(id).onchange = () => { S.groomers = []; S.staffId = null; renderGroomers(); renderSummary(); };
     $('findRooms').onclick = async () => { if (!S.petId) return toast('เลือกน้องก่อน','error'); const btn = $('findRooms'); btn.disabled = true; $('roomChoices').innerHTML = loadingHtml('กำลังค้นหาห้อง'); try { S.rooms = await api(`/api/rooms/available?petId=${S.petId}&checkIn=${$('checkIn').value}&checkOut=${$('checkOut').value}`); S.roomId = S.rooms[0] ? S.rooms[0].RoomID : null; if (!S.rooms.length) toast('ไม่มีห้องว่างที่เหมาะกับน้องในช่วงวันนี้','error'); renderRooms(); renderSummary(); } catch (e) { $('roomChoices').innerHTML = errorHtml(e.message); toast(e.message,'error'); } finally { btn.disabled = false; } };
@@ -120,6 +171,7 @@
       try { const r = await api('/api/bookings',{ method:'POST',body }); toast(`จองสำเร็จ! เลขที่ ${r.BookingNo} ยอดรวม ${baht(r.TotalPrice)}`,'ok'); setTimeout(() => (location.href='bookings.html'),1400); }
       catch (e) { toast(e.message,'error'); $('confirmBtn').disabled = false; $('confirmBtn').textContent = 'ยืนยันการจอง'; }
     };
+    $('note').addEventListener('input', renderProgress); prevDone = stepsDone(); setCurrentStep(nextOpenStep(prevDone));
     (async () => { await requireCustomer('book.html'); const [pets,cat] = await Promise.all([api('/api/pets'),api('/api/catalog')]); S.pets = pets; S.extras = cat.extras; renderPets(); renderExtras(); renderServices(); renderSummary(); const want = Number(new URLSearchParams(location.search).get('pet')); const first = pets.find((p) => p.PetID === want) || pets[0]; if (first) await selectPet(first.PetID); })().catch((e) => { if (e.message !== 'not logged in') toast(e.message,'error'); });
   </script>
 </body>

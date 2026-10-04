@@ -1,5 +1,27 @@
 const router = require('express').Router();
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 const { sql, query, exec, toLocalDate } = require('../db');
+
+const PET_UPLOAD_DIR = path.join(__dirname, '..', '..', 'public', 'uploads', 'pets');
+const MAX_PET_PHOTO_BYTES = 2 * 1024 * 1024;
+// Saves a data:image/... URL from the add-pet form. The type is checked from the file's own bytes, not the header.
+function savePetPhoto(dataUrl) {
+  const m = /^data:image\/(?:jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl));
+  if (!m) return { error: 'ไฟล์รูปไม่ถูกต้อง' };
+  const buf = Buffer.from(m[1], 'base64');
+  if (buf.length > MAX_PET_PHOTO_BYTES) return { error: 'รูปใหญ่เกิน 2 MB' };
+  const ext = buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff ? 'jpg'
+    : buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) ? 'png'
+    : buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP' ? 'webp' : null;
+  if (!ext) return { error: 'รองรับเฉพาะไฟล์ JPG, PNG หรือ WEBP' };
+  fs.mkdirSync(PET_UPLOAD_DIR, { recursive: true });
+  const name = `${crypto.randomUUID()}.${ext}`;
+  const file = path.join(PET_UPLOAD_DIR, name);
+  fs.writeFileSync(file, buf);
+  return { url: `/uploads/pets/${name}`, file };
+}
 
 const wrap = (fn) => (req, res, next) => fn(req, res, next).catch(next);
 function needLogin(req, res, next) {
@@ -31,6 +53,8 @@ router.get('/pets', needLogin, wrap(async (req, res) => {
 router.post('/pets', needLogin, wrap(async (req, res) => {
   const b = req.body || {};
   if (!b.petName || !b.species || !b.weightKg) return res.status(400).json({ error: 'กรอกชื่อ ชนิด และน้ำหนักของน้อง' });
+  const photo = b.photoData ? savePetPhoto(b.photoData) : null;
+  if (photo && photo.error) return res.status(400).json({ error: photo.error });
   const rows = await exec('customer.sp_AddPet', {
     CustomerID: [sql.Int, req.session.customer.id],
     PetName: [sql.NVarChar(50), b.petName.trim()],
@@ -40,8 +64,8 @@ router.post('/pets', needLogin, wrap(async (req, res) => {
     BirthDate: [sql.Date, b.birthDate ? toLocalDate(b.birthDate) : null],
     WeightKg: [sql.Decimal(5, 2), Number(b.weightKg)],
     MedicalNotes: [sql.NVarChar(500), b.medicalNotes || null],
-    PhotoURL: [sql.VarChar(255), b.photoURL || null],
-  });
+    PhotoURL: [sql.VarChar(255), photo ? photo.url : b.photoURL || null],
+  }).catch((err) => { if (photo) fs.unlink(photo.file, () => {}); throw err; });
   res.json(rows[0]);
 }));
 

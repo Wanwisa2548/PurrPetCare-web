@@ -6,3 +6,5 @@ node_modules/
 # Codex / Chrome Visual QA temporary files
 chrome-*-qa-profile*/
 *-revision-qa.png
+# Pet photos uploaded by customers
+public/uploads/

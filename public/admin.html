@@ -10,13 +10,13 @@
 <body class="admin-body">
   <div id="app" class="hidden admin-shell">
     <aside class="admin-sidebar">
-      <a href="admin.html" aria-label="PurrPetCare Admin"><span data-brand-lockup="sidebar"></span></a><div class="admin-label">ADMIN OPERATIONS</div>
+      <a class="admin-brand" href="admin.html" aria-label="PurrPetCare Admin"><span data-brand-lockup="sidebar"></span></a><div class="admin-label"><span class="admin-label-dot" aria-hidden="true"></span>Admin operations</div>
       <nav class="tabs" aria-label="เมนูผู้ดูแล">
-        <button data-tab="dash" class="on" type="button"><span data-i="home"></span> Dashboard</button>
-        <button data-tab="bookings" type="button"><span data-i="calendar"></span> การจอง / เช็กอิน</button>
-        <button data-tab="cal" type="button"><span data-i="scissors"></span> ตารางคิวช่าง</button>
+        <button data-tab="dash" class="on" type="button"><span class="side-ico art-box tone-profile" data-art="profile"></span><span class="side-text"><b>Dashboard</b><small>ภาพรวมของวันนี้</small></span></button>
+        <button data-tab="bookings" type="button"><span class="side-ico art-box tone-confirm" data-art="confirm"></span><span class="side-text"><b>การจอง / เช็กอิน</b><small>รับเข้าพักและส่งกลับบ้าน</small></span></button>
+        <button data-tab="cal" type="button"><span class="side-ico art-box tone-scissors" data-art="scissors"></span><span class="side-text"><b>ตารางคิวช่าง</b><small>คิวกรูมมิ่งของช่างแต่ละคน</small></span></button>
       </nav>
-      <div class="admin-side-bottom"><a href="index.html">ไปหน้าลูกค้า</a><button class="ghost sm block" id="adminLogout" type="button" style="margin-top:12px;color:#cbbfb5;border-color:#514842">ออกจากระบบ</button></div>
+      <div class="admin-side-bottom"><a class="side-link" href="index.html"><span data-i="home"></span>ไปหน้าลูกค้า<span class="side-link-arrow" aria-hidden="true">↗</span></a><button class="side-logout" id="adminLogout" type="button"><span data-i="logout"></span>ออกจากระบบ</button></div>
     </aside>
 
     <main class="admin-main">
@@ -35,12 +35,12 @@
         </section>
 
         <section id="tab-bookings" class="hidden">
-          <div class="page-head"><div><span class="eyebrow">Booking operations</span><h1 style="font-family:'DM Serif Display','Noto Sans Thai',serif">การจองและเช็กอิน</h1><p class="muted">จัดการสถานะ รับชำระเงิน และติดตามแต่ละบริการจากข้อมูลจริง</p></div><select id="bkFilter" style="width:auto"><option value="active">กำลังดำเนินการ</option><option value="Confirmed">รอเช็กอิน</option><option value="CheckedIn">อยู่ในร้าน</option><option value="Completed">เสร็จสิ้น</option><option value="Cancelled">ยกเลิก</option><option value="all">ทั้งหมด</option></select></div>
+          <div class="page-head"><div><span class="eyebrow">Booking operations</span><h1 style="font-family:var(--font-num)">การจองและเช็กอิน</h1><p class="muted">จัดการสถานะ รับชำระเงิน และติดตามแต่ละบริการจากข้อมูลจริง</p></div><select id="bkFilter" style="width:auto"><option value="active">กำลังดำเนินการ</option><option value="Confirmed">รอเช็กอิน</option><option value="CheckedIn">อยู่ในร้าน</option><option value="Completed">เสร็จสิ้น</option><option value="Cancelled">ยกเลิก</option><option value="all">ทั้งหมด</option></select></div>
           <div class="card"><div class="table-scroll"><table><thead><tr><th>เลขที่</th><th>น้อง / เจ้าของ</th><th>ห้องพัก</th><th>สถานะ</th><th>ยอด / ชำระ</th><th>การทำงาน</th></tr></thead><tbody id="bkRows"><tr><td colspan="6"><div class="loading-state"><div class="spinner"></div></div></td></tr></tbody></table></div></div>
         </section>
 
         <section id="tab-cal" class="hidden">
-          <div class="page-head"><div><span class="eyebrow">Grooming operations</span><h1 style="font-family:'DM Serif Display','Noto Sans Thai',serif">ตารางคิวช่าง</h1><p class="muted">ดูคิวตามเวลาและอัปเดตสถานะบริการ โดยกฎป้องกันคิวซ้อนยังทำงานใน SQL Server</p></div><div class="row"><button class="ghost sm" id="prevDay" type="button">‹</button><input type="date" id="calDate" style="width:auto"><button class="ghost sm" id="nextDay" type="button">›</button></div></div>
+          <div class="page-head"><div><span class="eyebrow">Grooming operations</span><h1 style="font-family:var(--font-num)">ตารางคิวช่าง</h1><p class="muted">ดูคิวตามเวลาและอัปเดตสถานะบริการ โดยกฎป้องกันคิวซ้อนยังทำงานใน SQL Server</p></div><div class="row"><button class="ghost sm" id="prevDay" type="button">‹</button><input type="date" id="calDate" style="width:auto"><button class="ghost sm" id="nextDay" type="button">›</button></div></div>
           <div class="card"><div id="cal"><div class="loading-state"><div class="spinner"></div></div></div><div class="db-proof"><span class="db-icon"></span><span>grooming.vw_GroomingSchedule • booking.sp_UpdateGroomingStatus</span></div></div>
         </section>
       </div>
@@ -51,6 +51,7 @@
   <script>
     const $ = (id) => document.getElementById(id); let tab = 'dash';
     document.querySelectorAll('[data-i]').forEach((el) => (el.innerHTML = icon(el.dataset.i)));
+    document.querySelectorAll('[data-art]').forEach((el) => (el.innerHTML = SERVICE_ART[el.dataset.art]));
     document.querySelectorAll('.db-icon').forEach((el) => (el.innerHTML = icon('database')));
     $('adminMenu').innerHTML = icon('menu'); $('topBell').innerHTML = icon('bell'); $('notifBell').innerHTML = icon('bell');
     $('todayLabel').textContent = new Intl.DateTimeFormat('th-TH',{ dateStyle:'long' }).format(new Date());

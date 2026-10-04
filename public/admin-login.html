@@ -34,7 +34,7 @@
   <script>
     const form = document.getElementById('adminLoginForm');
     const error = document.getElementById('adminLoginError');
-    document.getElementById('adminSecurityIcon').innerHTML = icon('shield');
+    document.getElementById('adminSecurityIcon').innerHTML = SERVICE_ART.lock;
     bindPasswordToggles();
     form.onsubmit = async (event) => {
       event.preventDefault();
