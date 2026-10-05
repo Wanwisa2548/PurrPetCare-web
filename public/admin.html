@@ -28,7 +28,7 @@
           <div class="grid g2" style="align-items:start">
             <section class="card"><div class="row"><div><span class="eyebrow" style="margin-bottom:5px">Room operations</span><h2 style="font-size:1.75rem;margin:0">สถานะห้องพัก</h2></div><span class="spacer"></span><span class="muted small">Live</span></div><div class="rooms" id="rooms" style="margin-top:20px"></div></section>
             <div>
-              <section class="card"><span class="eyebrow" style="margin-bottom:5px">Reports</span><h2 style="font-size:1.75rem">รายได้ 7 วันล่าสุด</h2><div id="revenue"></div><div class="db-proof"><span class="db-icon"></span><span>ข้อมูลรวมจาก booking.vw_DailyRevenue</span></div></section>
+              <section class="card"><span class="eyebrow" style="margin-bottom:5px">Reports</span><h2 style="font-size:1.75rem">รายได้ 7 วันล่าสุด</h2><div id="revenue"></div></section>
               <section class="card"><div class="row"><div><span class="eyebrow" style="margin-bottom:5px">Team updates</span><h2 style="font-size:1.75rem;margin:0">แจ้งเตือนช่าง</h2></div><span class="spacer"></span><span id="notifBell"></span></div><div id="notifs" class="small" style="margin-top:12px"></div></section>
             </div>
           </div>
@@ -36,12 +36,12 @@
 
         <section id="tab-bookings" class="hidden">
           <div class="page-head"><div><span class="eyebrow">Booking operations</span><h1 style="font-family:var(--font-num)">การจองและเช็กอิน</h1><p class="muted">จัดการสถานะ รับชำระเงิน และติดตามแต่ละบริการจากข้อมูลจริง</p></div><select id="bkFilter" style="width:auto"><option value="active">กำลังดำเนินการ</option><option value="Confirmed">รอเช็กอิน</option><option value="CheckedIn">อยู่ในร้าน</option><option value="Completed">เสร็จสิ้น</option><option value="Cancelled">ยกเลิก</option><option value="all">ทั้งหมด</option></select></div>
-          <div class="card"><div class="table-scroll"><table><thead><tr><th>เลขที่</th><th>น้อง / เจ้าของ</th><th>ห้องพัก</th><th>สถานะ</th><th>ยอด / ชำระ</th><th>การทำงาน</th></tr></thead><tbody id="bkRows"><tr><td colspan="6"><div class="loading-state"><div class="spinner"></div></div></td></tr></tbody></table></div></div>
+          <div class="admin-bk-list" id="bkRows"><div class="card loading-state"><div class="spinner"></div></div></div>
         </section>
 
         <section id="tab-cal" class="hidden">
           <div class="page-head"><div><span class="eyebrow">Grooming operations</span><h1 style="font-family:var(--font-num)">ตารางคิวช่าง</h1><p class="muted">ดูคิวตามเวลาและอัปเดตสถานะบริการ โดยกฎป้องกันคิวซ้อนยังทำงานใน SQL Server</p></div><div class="row"><button class="ghost sm" id="prevDay" type="button">‹</button><input type="date" id="calDate" style="width:auto"><button class="ghost sm" id="nextDay" type="button">›</button></div></div>
-          <div class="card"><div id="cal"><div class="loading-state"><div class="spinner"></div></div></div><div class="db-proof"><span class="db-icon"></span><span>grooming.vw_GroomingSchedule • booking.sp_UpdateGroomingStatus</span></div></div>
+          <div class="card"><div id="cal"><div class="loading-state"><div class="spinner"></div></div></div></div>
         </section>
       </div>
     </main>
@@ -52,7 +52,6 @@
     const $ = (id) => document.getElementById(id); let tab = 'dash';
     document.querySelectorAll('[data-i]').forEach((el) => (el.innerHTML = icon(el.dataset.i)));
     document.querySelectorAll('[data-art]').forEach((el) => (el.innerHTML = SERVICE_ART[el.dataset.art]));
-    document.querySelectorAll('.db-icon').forEach((el) => (el.innerHTML = icon('database')));
     $('adminMenu').innerHTML = icon('menu'); $('topBell').innerHTML = icon('bell'); $('notifBell').innerHTML = icon('bell');
     $('todayLabel').textContent = new Intl.DateTimeFormat('th-TH',{ dateStyle:'long' }).format(new Date());
 
@@ -61,7 +60,13 @@
     async function loadDash() {
       $('stats').innerHTML = '<div class="stat loading-state"><div class="spinner"></div></div>';
       const d = await api('/api/admin/dashboard'); const count = (st) => d.rooms.filter((r) => r.Status === st).length; const todayRev = (d.revenue.find((r) => r.PayDate === ymd(new Date())) || {}).Revenue || 0;
-      $('stats').innerHTML = [['ห้องว่าง',`${count('Available')} / ${d.rooms.length}`,'bed'],['น้องอยู่ในร้าน',d.counts.InHouse || 0,'care'],['รอเช็กอิน',d.counts.Waiting || 0,'calendar'],['รายได้วันนี้',baht(todayRev),'database']].map(([l,n,i]) => `<article class="stat"><div class="row"><div class="icon-box" style="width:42px;height:42px">${icon(i)}</div>${l === 'ห้องว่าง' ? badge('Available') : ''}</div><div><div class="n">${n}</div><div class="l">${l}</div></div></article>`).join('');
+      const free = count('Available'), total = d.rooms.length;
+      $('stats').innerHTML = [
+        ['rooms', 'roomM', `${free}<small> / ${total}</small>`, 'ห้องว่าง', `<div class="stat-bar" aria-hidden="true"><span style="width:${total ? Math.round(free / total * 100) : 0}%"></span></div>`],
+        ['inhouse', 'pets', d.counts.InHouse || 0, 'น้องอยู่ในร้าน', '<span class="stat-sub">เช็กอินแล้ววันนี้</span>'],
+        ['waiting', 'checkin', d.counts.Waiting || 0, 'รอเช็กอิน', '<span class="stat-sub">การจองที่ยืนยันแล้ว</span>'],
+        ['revenue', 'money', baht(todayRev), 'รายได้วันนี้', `<span class="stat-sub">${thDate(ymd(new Date()))}</span>`],
+      ].map(([key, art, n, label, extra]) => `<article class="stat stat-${key}"><span class="stat-art art-box tone-${art}">${SERVICE_ART[art]}</span><div><div class="n">${n}</div><div class="l">${label}</div>${extra}</div><span class="stat-ghost" aria-hidden="true">${SERVICE_ART[art]}</span></article>`).join('');
       $('rooms').innerHTML = d.rooms.length ? d.rooms.map((r) => `<article class="room ${r.Status}"><div class="row"><span class="no">${esc(r.RoomNo)}</span><span class="spacer"></span><span class="muted small">${r.RoomSize}</span></div><div style="margin:8px 0">${badge(r.Status)}</div>${r.PetName ? `<div class="small"><b>${esc(r.PetName)}</b><br><span class="muted">ออก ${thDate(r.CheckOutDate)}</span></div>` : '<div class="muted small">พร้อมรับน้อง</div>'}${r.Status === 'Cleaning' ? `<button class="teal sm" data-clean="${r.RoomID}" style="margin-top:8px">ทำความสะอาดเสร็จ</button>` : ''}</article>`).join('') : '<div class="empty">ไม่พบข้อมูลห้อง</div>';
       $('rooms').querySelectorAll('[data-clean]').forEach((b) => (b.onclick = () => act(`/api/admin/rooms/${b.dataset.clean}/cleaned`)));
       const max = Math.max(1,...d.revenue.map((r) => Number(r.Revenue)));
@@ -70,9 +75,23 @@
     }
 
     async function loadBookings() {
-      $('bkRows').innerHTML = '<tr><td colspan="6"><div class="loading-state"><div class="spinner"></div></div></td></tr>';
+      $('bkRows').innerHTML = '<div class="card loading-state"><div class="spinner"></div></div>';
       const rows = await api('/api/admin/bookings?status=' + $('bkFilter').value);
-      $('bkRows').innerHTML = rows.length ? rows.map((b) => { const due = Number(b.TotalPrice || 0) - Number(b.PaidAmount || 0); return `<tr><td><b>${esc(b.BookingNo)}</b><div class="muted small">${thDate(b.BookingDate)}</div></td><td><div class="row">${petIcon(b.Species)} <b>${esc(b.PetName)}</b> <span class="muted small">${Number(b.WeightKg)} kg</span></div><div class="small">${esc(b.CustomerName)} · ${esc(b.Phone)}</div>${b.MedicalNotes ? `<div class="note">${icon('care')} ${esc(b.MedicalNotes)}</div>` : ''}</td><td>${b.RoomNo ? `ห้อง ${esc(b.RoomNo)}<div class="muted small">${thDate(b.CheckInDate)} – ${thDate(b.CheckOutDate)}</div>` : '<span class="muted">บริการแบบไม่พัก</span>'}</td><td>${badge(b.Status)}</td><td>${baht(b.TotalPrice)}<div class="small ${due > 0 ? '' : 'muted'}">ชำระ ${baht(b.PaidAmount)}</div></td><td style="white-space:nowrap">${b.Status === 'Confirmed' ? `<button class="danger sm" data-a="cancel" data-id="${b.BookingID}">ยกเลิก</button>` : ''} ${b.Status !== 'Cancelled' && due > 0 ? `<button class="ghost sm" data-a="pay" data-id="${b.BookingID}" data-due="${due}">รับเงิน ${baht(due)}</button>` : ''}</td></tr><tr class="tr-track"><td colspan="6">${trackerHtml(b,true)}</td></tr>`; }).join('') : '<tr><td colspan="6" class="empty">ไม่มีรายการในสถานะนี้</td></tr>';
+      // One card per booking: header (pet, booking, status, money, actions) → info chips → tracker, all in the same card
+      $('bkRows').innerHTML = rows.length ? rows.map((b) => {
+        const due = Number(b.TotalPrice || 0) - Number(b.PaidAmount || 0), note = String(b.MedicalNotes || '').trim();
+        return `<article class="card admin-bk st-${esc(b.Status)}">
+          <header class="admin-bk-head">
+            <div class="admin-pet">${petProfileImage(b, 'admin')}<div><div class="admin-pet-name"><b>${esc(b.PetName)}</b><span class="muted small">${Number(b.WeightKg)} kg</span></div><div class="small muted">${esc(b.CustomerName)} · ${esc(b.Phone)}</div></div></div>
+            <div class="admin-bk-no"><b>${esc(b.BookingNo)}</b><span class="muted small">จองเมื่อ ${thDate(b.BookingDate)}</span></div>
+            ${badge(b.Status)}
+            <div class="admin-bk-money"><b>${baht(b.TotalPrice)}</b><span class="small ${due > 0 ? 'is-due' : 'muted'}">${due > 0 ? `ค้างชำระ ${baht(due)}` : 'ชำระครบแล้ว'}</span></div>
+            <div class="admin-bk-actions">${b.Status === 'Confirmed' ? `<button class="danger sm" data-a="cancel" data-id="${b.BookingID}">ยกเลิก</button>` : ''}${b.Status !== 'Cancelled' && due > 0 ? `<button class="sm" data-a="pay" data-id="${b.BookingID}" data-due="${due}">รับเงิน ${baht(due)}</button>` : ''}</div>
+          </header>
+          <div class="admin-bk-info">${b.RoomNo ? `<span class="bk-chip">${icon('bed')} ห้อง ${esc(b.RoomNo)} · ${thDate(b.CheckInDate)} – ${thDate(b.CheckOutDate)}</span>` : `<span class="bk-chip">${icon('scissors')} บริการแบบไม่พัก</span>`}${note && note !== '-' ? `<span class="bk-chip is-note">${icon('care')} ${esc(note)}</span>` : ''}</div>
+          ${trackerHtml(b, true, true)}
+        </article>`;
+      }).join('') : '<div class="card empty">ไม่มีรายการในสถานะนี้</div>';
       bindTrackerActions($('bkRows'),refresh);
       $('bkRows').querySelectorAll('[data-a]').forEach((b) => (b.onclick = () => { const { a,id,due } = b.dataset; if (a === 'pay') return act(`/api/admin/bookings/${id}/payment`,{ amount:Number(due),method:'Cash' }); if (a === 'cancel' && b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = 'ยืนยันยกเลิก?'; return; } act(`/api/admin/bookings/${id}/${a}`); }));
     }

@@ -92,7 +92,7 @@
     document.getElementById('trust-track').innerHTML = icon('refresh') + ' ติดตามสถานะได้';
 
     (async () => {
-      await renderTopbar('index.html');
+      const me = await renderTopbar('index.html');
       try {
         const cat = await api('/api/catalog');
         document.getElementById('catalog').innerHTML = [
@@ -107,6 +107,12 @@
         document.getElementById('roomShowcase').innerHTML = errorHtml(e.message);
         document.getElementById('groomingShowcase').innerHTML = errorHtml(e.message);
       }
+      // Admins can't book as a customer: point the booking/tracking buttons at the dashboard and say so
+      if (me.admin) document.querySelectorAll('main a[href^="book.html"], main a[href^="bookings.html"]').forEach((a) => {
+        const tracking = a.getAttribute('href').startsWith('bookings');
+        a.href = 'admin.html';
+        a.textContent = a.classList.contains('btn') ? (tracking ? 'ดูการจองทั้งหมด' : 'ไปที่ Admin Dashboard') : 'จัดการใน Admin Dashboard';
+      });
     })();
 
   </script>

@@ -42,14 +42,15 @@ router.get('/bookings', wrap(async (req, res) => {
   const status = req.query.status || 'active';
   const [rows, grooming, extras] = await Promise.all([
     query(
-      `SELECT BookingID, BookingNo, CONVERT(char(16), BookingDate, 120) AS BookingDate, Status, TrackerStage,
-              TotalPrice, PaidAmount, PetName, Species, Breed, WeightKg, MedicalNotes,
-              CustomerName, Phone, RoomID, RoomNo,
-              CONVERT(char(10), CheckInDate, 23) AS CheckInDate, CONVERT(char(10), CheckOutDate, 23) AS CheckOutDate, Nights
-       FROM booking.vw_BookingSummary
-       WHERE (@st = 'all') OR (@st = 'active' AND Status IN ('Confirmed', 'CheckedIn')) OR Status = @st
-       ORDER BY CASE Status WHEN 'CheckedIn' THEN 0 WHEN 'Confirmed' THEN 1 ELSE 2 END,
-                ISNULL(CheckInDate, BookingDate), BookingID DESC`,
+      `SELECT b.BookingID, b.BookingNo, CONVERT(char(16), b.BookingDate, 120) AS BookingDate, b.Status, b.TrackerStage,
+              b.TotalPrice, b.PaidAmount, b.PetName, b.Species, b.Breed, b.WeightKg, b.MedicalNotes, p.PhotoURL,
+              b.CustomerName, b.Phone, b.RoomID, b.RoomNo,
+              CONVERT(char(10), b.CheckInDate, 23) AS CheckInDate, CONVERT(char(10), b.CheckOutDate, 23) AS CheckOutDate, b.Nights
+       FROM booking.vw_BookingSummary b
+       LEFT JOIN customer.Pets p ON p.PetID = b.PetID
+       WHERE (@st = 'all') OR (@st = 'active' AND b.Status IN ('Confirmed', 'CheckedIn')) OR b.Status = @st
+       ORDER BY CASE b.Status WHEN 'CheckedIn' THEN 0 WHEN 'Confirmed' THEN 1 ELSE 2 END,
+                ISNULL(b.CheckInDate, b.BookingDate), b.BookingID DESC`,
       { st: [sql.VarChar(10), status] }
     ),
     query(
