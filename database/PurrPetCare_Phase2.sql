@@ -7,13 +7,13 @@ GO
 
 /* =========================== TYPES (Table Type) =========================== */
 IF TYPE_ID('booking.ServiceRequest') IS NULL
-    CREATE TYPE booking.ServiceRequest AS TABLE (
+    CREATE TYPE booking.ServiceRequest AS TABLE (  -- Table Type รับหลายบริการ (Programmability > Types)
         ServiceID int      NOT NULL,
         StaffID   int      NOT NULL,
         StartTime datetime NOT NULL
     );
 IF TYPE_ID('booking.ExtraRequest') IS NULL
-    CREATE TYPE booking.ExtraRequest AS TABLE (
+    CREATE TYPE booking.ExtraRequest AS TABLE (  -- Table Type รับหลายบริการเสริม (Programmability > Types)
         ExtraID int NOT NULL,
         Qty     int NOT NULL
     );
@@ -21,7 +21,7 @@ GO
 
 /* =============================== FUNCTIONS =============================== */
 -- Function 1: ราคาอาบน้ำ/ตัดขนตามน้ำหนัก  < 5 kg ปกติ | 5-15 kg +20% | > 15 kg +50%
-CREATE OR ALTER FUNCTION booking.fn_CalculateGroomingPrice (@PetID int, @ServiceID int)
+CREATE OR ALTER FUNCTION booking.fn_CalculateGroomingPrice (@PetID int, @ServiceID int)  -- Scalar Function (Programmability > Functions)
 RETURNS money
 AS
 BEGIN
@@ -35,7 +35,7 @@ END
 GO
 
 -- Function 2: ราคารวมทั้งหมด = ค่าห้อง + ค่าอาบน้ำตัดขน + ค่าบริการเสริม
-CREATE OR ALTER FUNCTION booking.fn_CalculateTotalPrice (@BookingID int)
+CREATE OR ALTER FUNCTION booking.fn_CalculateTotalPrice (@BookingID int)  -- Scalar Function (Programmability > Functions)
 RETURNS money
 AS
 BEGIN
@@ -48,7 +48,7 @@ END
 GO
 
 -- Function 3 (Table-valued): ห้องว่างในช่วงวันที่ และใหญ่พอสำหรับน้อง
-CREATE OR ALTER FUNCTION hotel.fn_AvailableRooms (@CheckIn date, @CheckOut date, @MinSize char(1))
+CREATE OR ALTER FUNCTION hotel.fn_AvailableRooms (@CheckIn date, @CheckOut date, @MinSize char(1))  -- Table-valued Function (Programmability > Functions)
 RETURNS TABLE
 AS
 RETURN
@@ -56,35 +56,35 @@ RETURN
     FROM hotel.Rooms r
     JOIN hotel.RoomTypes t ON t.RoomSize = r.RoomSize
     WHERE r.Status <> 'Maintenance'
-      AND CHARINDEX(r.RoomSize, 'SML') >= CHARINDEX(@MinSize, 'SML')
-      AND NOT EXISTS (
+      AND CHARINDEX(r.RoomSize, 'SML') >= CHARINDEX(@MinSize, 'SML')  -- CHARINDEX: เทียบลำดับขนาด S, M, L ให้ห้องใหญ่พอกับสัตว์เลี้ยง
+      AND NOT EXISTS (  -- NOT EXISTS: ตัดห้องที่มีการจองทับช่วงวันที่ออก
             SELECT 1
             FROM booking.Booking_Rooms br
             JOIN booking.Bookings b ON b.BookingID = br.BookingID
             WHERE br.RoomID = r.RoomID
               AND b.Status NOT IN ('Cancelled', 'Completed')
-              AND br.CheckInDate < @CheckOut
-              AND br.CheckOutDate > @CheckIn);
+              AND br.CheckInDate < @CheckOut  -- สูตรช่วงเวลาทับกัน: start < end ของอีกช่วง
+              AND br.CheckOutDate > @CheckIn);  -- และ end > start ของอีกช่วง จึงเช็กอินวันที่อีกการจองออกได้
 GO
 
 -- Function 4 (Table-valued): ช่างที่ว่างในช่วงเวลา
-CREATE OR ALTER FUNCTION grooming.fn_AvailableGroomers (@Start datetime, @End datetime)
+CREATE OR ALTER FUNCTION grooming.fn_AvailableGroomers (@Start datetime, @End datetime)  -- Table-valued Function (Programmability > Functions)
 RETURNS TABLE
 AS
 RETURN
     SELECT s.StaffID, s.FullName
     FROM ops.Staff s
     WHERE s.Role = 'Groomer' AND s.IsActive = 1
-      AND NOT EXISTS (
+      AND NOT EXISTS (  -- NOT EXISTS: ตัดช่างที่มีคิวทับช่วงเวลาออก
             SELECT 1 FROM booking.Booking_Grooming g
             WHERE g.StaffID = s.StaffID
               AND g.Status <> 'Cancelled'
-              AND g.StartTime < @End
-              AND g.EndTime   > @Start);
+              AND g.StartTime < @End  -- สูตรช่วงเวลาทับกัน: start < end ของอีกช่วง
+              AND g.EndTime   > @Start);  -- และ end > start ของอีกช่วง
 GO
 
 /* ================================= VIEWS ================================= */
-CREATE OR ALTER VIEW customer.vw_PetProfiles
+CREATE OR ALTER VIEW customer.vw_PetProfiles  -- View (Views)
 AS
 SELECT PetID, CustomerID, PetName, Species, Breed, Gender, BirthDate,
        WeightKg, WeightClass, MedicalNotes, PhotoURL
@@ -93,15 +93,15 @@ WHERE IsActive = 1;
 GO
 
 -- สรุปการจอง + สถานะสำหรับหน้า Status Tracker
-CREATE OR ALTER VIEW booking.vw_BookingSummary
+CREATE OR ALTER VIEW booking.vw_BookingSummary  -- View (Views)
 AS
 SELECT b.BookingID, b.BookingNo, b.BookingDate, b.Status, b.TotalPrice, b.Note,
        p.PetID, p.PetName, p.Species, p.Breed, p.WeightKg, p.MedicalNotes,
        c.CustomerID, c.FullName AS CustomerName, c.Phone,
        br.RoomID, r.RoomNo, br.CheckInDate, br.CheckOutDate, br.Nights,
        br.ActualCheckIn, br.ActualCheckOut,
-       ISNULL(pay.PaidAmount, 0) AS PaidAmount,
-       CASE
+       ISNULL(pay.PaidAmount, 0) AS PaidAmount,  -- ISNULL: การจองที่ยังไม่ชำระแสดงยอดเป็น 0
+       CASE  -- CASE: แปลงสถานะเป็นขั้นตอนบน Status Tracker
            WHEN b.Status = 'Cancelled' THEN N'ยกเลิกแล้ว'
            WHEN b.Status = 'Completed' THEN N'กลับบ้านแล้ว'
            WHEN EXISTS (SELECT 1 FROM booking.Booking_Grooming g
@@ -117,14 +117,14 @@ SELECT b.BookingID, b.BookingNo, b.BookingDate, b.Status, b.TotalPrice, b.Note,
 FROM booking.Bookings b
 JOIN customer.Pets p      ON p.PetID = b.PetID
 JOIN customer.Customers c ON c.CustomerID = p.CustomerID
-LEFT JOIN booking.Booking_Rooms br ON br.BookingID = b.BookingID
-LEFT JOIN hotel.Rooms r            ON r.RoomID = br.RoomID
-LEFT JOIN (SELECT BookingID, SUM(Amount) AS PaidAmount
+LEFT JOIN booking.Booking_Rooms br ON br.BookingID = b.BookingID  -- LEFT JOIN: คงการจองที่ไม่มีห้องพักไว้ในผลลัพธ์
+LEFT JOIN hotel.Rooms r            ON r.RoomID = br.RoomID  -- LEFT JOIN: ดึงเลขห้องเมื่อการจองมีห้องพัก
+LEFT JOIN (SELECT BookingID, SUM(Amount) AS PaidAmount  -- LEFT JOIN: รวมยอดชำระ คงการจองที่ยังไม่ชำระไว้
            FROM booking.Payments GROUP BY BookingID) pay ON pay.BookingID = b.BookingID;
 GO
 
 -- ตารางคิวช่าง (Grooming Calendar)
-CREATE OR ALTER VIEW grooming.vw_GroomingSchedule
+CREATE OR ALTER VIEW grooming.vw_GroomingSchedule  -- View (Views)
 AS
 SELECT g.BookingGroomingID, g.BookingID, b.BookingNo, g.StaffID, s.FullName AS StaffName,
        g.ServiceID, sv.ServiceName, p.PetName, p.Species, p.Breed, p.WeightKg, p.MedicalNotes,
@@ -138,7 +138,7 @@ WHERE b.Status <> 'Cancelled';
 GO
 
 -- บริการเสริมที่ลูกค้าเลือกในแต่ละการจอง + สถานะ (Status Tracker / Admin)
-CREATE OR ALTER VIEW booking.vw_BookingExtras
+CREATE OR ALTER VIEW booking.vw_BookingExtras  -- View (Views)
 AS
 SELECT be.BookingID, be.ExtraID, e.ExtraName, e.Unit, be.Qty, be.LineTotal, be.Status
 FROM booking.Booking_Extras be
@@ -146,13 +146,13 @@ JOIN booking.Extras e ON e.ExtraID = be.ExtraID;
 GO
 
 -- สถานะห้องตอนนี้ + น้องที่พักอยู่ (Dashboard)
-CREATE OR ALTER VIEW hotel.vw_RoomStatusToday
+CREATE OR ALTER VIEW hotel.vw_RoomStatusToday  -- View (Views)
 AS
 SELECT r.RoomID, r.RoomNo, r.RoomSize, t.TypeName, t.PricePerNight, r.Status,
        cur.BookingID, cur.BookingNo, cur.PetName, cur.CheckOutDate
 FROM hotel.Rooms r
 JOIN hotel.RoomTypes t ON t.RoomSize = r.RoomSize
-OUTER APPLY (
+OUTER APPLY (  -- OUTER APPLY: คงห้องที่ไม่มีผู้เข้าพักไว้ในผลลัพธ์
     SELECT TOP 1 b.BookingID, b.BookingNo, p.PetName, br.CheckOutDate
     FROM booking.Booking_Rooms br
     JOIN booking.Bookings b ON b.BookingID = br.BookingID
@@ -163,7 +163,7 @@ OUTER APPLY (
 GO
 
 -- รายได้รายวัน (Dashboard)
-CREATE OR ALTER VIEW booking.vw_DailyRevenue
+CREATE OR ALTER VIEW booking.vw_DailyRevenue  -- View (Views)
 AS
 SELECT CAST(PaymentDate AS date) AS PayDate,
        COUNT(*)    AS PaymentCount,
@@ -174,19 +174,19 @@ GO
 
 /* ================================ TRIGGERS ================================ */
 -- Trigger 1: เช็กอิน -> ห้อง Occupied / เช็กเอาต์ -> ห้อง Cleaning (และอัปเดตสถานะการจอง)
-CREATE OR ALTER TRIGGER booking.trg_BookingRooms_Status
+CREATE OR ALTER TRIGGER booking.trg_BookingRooms_Status  -- DML Trigger (Tables > Booking_Rooms > Triggers)
 ON booking.Booking_Rooms
-FOR UPDATE
+FOR UPDATE  -- AFTER trigger: ทำงานหลังแก้ไขข้อมูล Booking_Rooms
 AS
 BEGIN
     SET NOCOUNT ON;
-    IF UPDATE(ActualCheckIn)
+    IF UPDATE(ActualCheckIn)  -- UPDATE(): ตรวจว่าคำสั่งนี้แก้คอลัมน์ ActualCheckIn
     BEGIN
         UPDATE r SET Status = 'Occupied'
         FROM hotel.Rooms r
-        JOIN inserted i ON i.RoomID = r.RoomID
-        JOIN deleted d  ON d.BookingRoomID = i.BookingRoomID
-        WHERE i.ActualCheckIn IS NOT NULL AND d.ActualCheckIn IS NULL;
+        JOIN inserted i ON i.RoomID = r.RoomID  -- inserted: ค่าใหม่หลังแก้ไข
+        JOIN deleted d  ON d.BookingRoomID = i.BookingRoomID  -- deleted: ค่าเดิมก่อนแก้ไข
+        WHERE i.ActualCheckIn IS NOT NULL AND d.ActualCheckIn IS NULL;  -- ทำเฉพาะแถวที่เพิ่งเช็กอิน (จาก NULL เป็นมีค่า)
 
         UPDATE b SET Status = 'CheckedIn'
         FROM booking.Bookings b
@@ -194,13 +194,13 @@ BEGIN
         JOIN deleted d  ON d.BookingRoomID = i.BookingRoomID
         WHERE i.ActualCheckIn IS NOT NULL AND d.ActualCheckIn IS NULL;
     END
-    IF UPDATE(ActualCheckOut)
+    IF UPDATE(ActualCheckOut)  -- UPDATE(): ตรวจว่าคำสั่งนี้แก้คอลัมน์ ActualCheckOut
     BEGIN
         UPDATE r SET Status = 'Cleaning'
         FROM hotel.Rooms r
-        JOIN inserted i ON i.RoomID = r.RoomID
-        JOIN deleted d  ON d.BookingRoomID = i.BookingRoomID
-        WHERE i.ActualCheckOut IS NOT NULL AND d.ActualCheckOut IS NULL;
+        JOIN inserted i ON i.RoomID = r.RoomID  -- inserted: ค่าใหม่หลังแก้ไข
+        JOIN deleted d  ON d.BookingRoomID = i.BookingRoomID  -- deleted: ค่าเดิมก่อนแก้ไข
+        WHERE i.ActualCheckOut IS NOT NULL AND d.ActualCheckOut IS NULL;  -- ทำเฉพาะแถวที่เพิ่งเช็กเอาต์ (จาก NULL เป็นมีค่า)
 
         UPDATE b SET Status = 'Completed'
         FROM booking.Bookings b
@@ -212,92 +212,92 @@ END
 GO
 
 -- Trigger 2: ป้องกันการจองคิวช่างซ้อน (เช็กทุกแถวใน inserted ไม่ใช่แค่แถวเดียว)
-CREATE OR ALTER TRIGGER booking.trg_BookingGrooming_NoOverlap
+CREATE OR ALTER TRIGGER booking.trg_BookingGrooming_NoOverlap  -- DML Trigger (Tables > Booking_Grooming > Triggers)
 ON booking.Booking_Grooming
-FOR INSERT, UPDATE
+FOR INSERT, UPDATE  -- AFTER trigger: ทำงานหลังเพิ่ม/แก้คิว
 AS
 BEGIN
     SET NOCOUNT ON;
     IF EXISTS (
         SELECT 1
-        FROM inserted i
+        FROM inserted i  -- inserted: แถวใหม่ของคำสั่งนี้ ตรวจครบทุกแถว
         JOIN booking.Booking_Grooming g
              ON  g.StaffID = i.StaffID
-             AND g.BookingGroomingID <> i.BookingGroomingID
+             AND g.BookingGroomingID <> i.BookingGroomingID  -- ไม่เทียบกับแถวของตนเอง
              AND g.Status <> 'Cancelled'
         WHERE i.Status <> 'Cancelled'
-          AND g.StartTime < i.EndTime
-          AND g.EndTime   > i.StartTime)
+          AND g.StartTime < i.EndTime  -- สูตรช่วงเวลาทับกัน: start < end ของอีกช่วง
+          AND g.EndTime   > i.StartTime)  -- และ end > start ของอีกช่วง
     BEGIN
-        ROLLBACK TRANSACTION;
-        RAISERROR(N'ช่างคนนี้มีคิวในช่วงเวลานั้นแล้ว ไม่สามารถจองซ้อนได้', 16, 1);
+        ROLLBACK TRANSACTION;  -- ยกเลิกทั้ง Transaction ถ้าคิวช่างชน
+        RAISERROR(N'ช่างคนนี้มีคิวในช่วงเวลานั้นแล้ว ไม่สามารถจองซ้อนได้', 16, 1);  -- RAISERROR ระดับ 16: แจ้งข้อผิดพลาดกลับไปยังผู้เรียก
     END
 END
 GO
 
 -- Trigger 3: ป้องกันการจองห้องเดียวกันวันทับกัน (กันไว้อีกชั้น เผื่อมีคนกดจองพร้อมกัน)
-CREATE OR ALTER TRIGGER booking.trg_BookingRooms_NoOverlap
+CREATE OR ALTER TRIGGER booking.trg_BookingRooms_NoOverlap  -- DML Trigger (Tables > Booking_Rooms > Triggers)
 ON booking.Booking_Rooms
-FOR INSERT, UPDATE
+FOR INSERT, UPDATE  -- AFTER trigger: ทำงานหลังเพิ่ม/แก้การจองห้อง
 AS
 BEGIN
     SET NOCOUNT ON;
     IF EXISTS (
         SELECT 1
-        FROM inserted i
+        FROM inserted i  -- inserted: แถวใหม่ของคำสั่งนี้ ตรวจครบทุกแถว
         JOIN booking.Booking_Rooms br
              ON  br.RoomID = i.RoomID
-             AND br.BookingRoomID <> i.BookingRoomID
+             AND br.BookingRoomID <> i.BookingRoomID  -- ไม่เทียบกับแถวของตนเอง
         JOIN booking.Bookings b
              ON  b.BookingID = br.BookingID
              AND b.Status NOT IN ('Cancelled', 'Completed')
-        WHERE br.CheckInDate  < i.CheckOutDate
-          AND br.CheckOutDate > i.CheckInDate)
+        WHERE br.CheckInDate  < i.CheckOutDate  -- สูตรช่วงเวลาทับกัน: start < end ของอีกช่วง
+          AND br.CheckOutDate > i.CheckInDate)  -- และ end > start ของอีกช่วง
     BEGIN
-        ROLLBACK TRANSACTION;
-        RAISERROR(N'ห้องนี้ถูกจองในช่วงวันที่ทับกันแล้ว', 16, 1);
+        ROLLBACK TRANSACTION;  -- ยกเลิกทั้ง Transaction ถ้าวันที่จองห้องทับกัน
+        RAISERROR(N'ห้องนี้ถูกจองในช่วงวันที่ทับกันแล้ว', 16, 1);  -- RAISERROR ระดับ 16: แจ้งข้อผิดพลาดกลับไปยังผู้เรียก
     END
 END
 GO
 
 -- Database Trigger: กันการลบตาราง + บันทึกลง AuditLog
 -- (ถ้าจำเป็นต้องลบจริง: DISABLE TRIGGER trg_ProtectTables ON DATABASE;)
-CREATE OR ALTER TRIGGER trg_ProtectTables
+CREATE OR ALTER TRIGGER trg_ProtectTables  -- Database Trigger (Programmability > Database Triggers)
 ON DATABASE
-FOR DROP_TABLE
+FOR DROP_TABLE  -- DDL Trigger: ทำงานเมื่อมีคำสั่ง DROP TABLE
 AS
 BEGIN
     SET NOCOUNT ON;
-    DECLARE @e xml = EVENTDATA();
-    ROLLBACK;
+    DECLARE @e xml = EVENTDATA();  -- EVENTDATA(): ข้อมูลเหตุการณ์ในรูปแบบ XML
+    ROLLBACK;  -- ยกเลิก DROP ก่อน แล้วจึงบันทึก Log เพื่อไม่ให้ Log ถูกย้อนกลับ
     INSERT INTO ops.AuditLog (EventType, ObjectName, Detail)
     VALUES ('DROP_TABLE_BLOCKED',
             @e.value('(/EVENT_INSTANCE/ObjectName)[1]', 'nvarchar(256)'),
             @e.value('(/EVENT_INSTANCE/TSQLCommand/CommandText)[1]', 'nvarchar(max)'));
-    RAISERROR(N'ห้ามลบตารางของระบบ PurrPet Care', 16, 1);
+    RAISERROR(N'ห้ามลบตารางของระบบ PurrPet Care', 16, 1);  -- RAISERROR ระดับ 16: แจ้งข้อผิดพลาดกลับไปยังผู้เรียก
 END
 GO
 
 /* =========================== STORED PROCEDURES =========================== */
 -- ลูกค้า: สมัครสมาชิก
-CREATE OR ALTER PROCEDURE customer.sp_RegisterCustomer
+CREATE OR ALTER PROCEDURE customer.sp_RegisterCustomer  -- Stored Procedure (Programmability > Stored Procedures)
     @FullName nvarchar(100), @Phone varchar(10), @Email varchar(100), @PasswordHash varchar(255)
 AS
 BEGIN
     SET NOCOUNT ON;
     IF EXISTS (SELECT 1 FROM customer.Customers WHERE Email = @Email)
-    BEGIN RAISERROR(N'อีเมลนี้ถูกใช้สมัครแล้ว', 16, 1); RETURN; END
+    BEGIN RAISERROR(N'อีเมลนี้ถูกใช้สมัครแล้ว', 16, 1); RETURN; END  -- RAISERROR ไม่หยุดการทำงานเอง จึงต้อง RETURN ต่อท้าย
     IF EXISTS (SELECT 1 FROM customer.Customers WHERE Phone = @Phone)
-    BEGIN RAISERROR(N'เบอร์โทรนี้ถูกใช้สมัครแล้ว', 16, 1); RETURN; END
+    BEGIN RAISERROR(N'เบอร์โทรนี้ถูกใช้สมัครแล้ว', 16, 1); RETURN; END  -- RAISERROR แล้ว RETURN: หยุดเมื่อเบอร์โทรซ้ำ
 
     INSERT INTO customer.Customers (FullName, Phone, Email, PasswordHash)
     VALUES (@FullName, @Phone, @Email, @PasswordHash);
-    SELECT CAST(SCOPE_IDENTITY() AS int) AS CustomerID, @FullName AS FullName;
+    SELECT CAST(SCOPE_IDENTITY() AS int) AS CustomerID, @FullName AS FullName;  -- SCOPE_IDENTITY(): รหัสล่าสุดที่สร้างใน Scope นี้
 END
 GO
 
 -- ลูกค้า: ดึงข้อมูลสำหรับล็อกอิน (เว็บเป็นคนเทียบรหัสผ่านที่ hash ไว้)
-CREATE OR ALTER PROCEDURE customer.sp_GetCustomerLogin @Email varchar(100)
+CREATE OR ALTER PROCEDURE customer.sp_GetCustomerLogin @Email varchar(100)  -- Stored Procedure (Programmability > Stored Procedures)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -306,7 +306,7 @@ END
 GO
 
 -- ลูกค้า: เพิ่มโปรไฟล์สัตว์เลี้ยง
-CREATE OR ALTER PROCEDURE customer.sp_AddPet
+CREATE OR ALTER PROCEDURE customer.sp_AddPet  -- Stored Procedure (Programmability > Stored Procedures)
     @CustomerID int, @PetName nvarchar(50), @Species varchar(3), @Breed nvarchar(50) = NULL,
     @Gender char(1) = NULL, @BirthDate date = NULL, @WeightKg decimal(5,2),
     @MedicalNotes nvarchar(500) = NULL, @PhotoURL varchar(255) = NULL
@@ -315,35 +315,35 @@ BEGIN
     SET NOCOUNT ON;
     INSERT INTO customer.Pets (CustomerID, PetName, Species, Breed, Gender, BirthDate, WeightKg, MedicalNotes, PhotoURL)
     VALUES (@CustomerID, @PetName, @Species, @Breed, @Gender, @BirthDate, @WeightKg, @MedicalNotes, @PhotoURL);
-    SELECT CAST(SCOPE_IDENTITY() AS int) AS PetID;
+    SELECT CAST(SCOPE_IDENTITY() AS int) AS PetID;  -- SCOPE_IDENTITY(): รหัสล่าสุดที่สร้างใน Scope นี้
 END
 GO
 
 -- จองแพ็กเกจรวบยอด (Single-Click Booking) ทำใน TRANSACTION เดียว
-CREATE OR ALTER PROCEDURE booking.sp_CreateBooking
+CREATE OR ALTER PROCEDURE booking.sp_CreateBooking  -- Stored Procedure (Programmability > Stored Procedures)
     @CustomerID   int,
     @PetID        int,
     @RoomID       int  = NULL,
     @CheckInDate  date = NULL,
     @CheckOutDate date = NULL,
-    @Services     booking.ServiceRequest READONLY,
-    @Extras       booking.ExtraRequest   READONLY,
+    @Services     booking.ServiceRequest READONLY,  -- Table-Valued Parameter ต้องระบุ READONLY
+    @Extras       booking.ExtraRequest   READONLY,  -- Table-Valued Parameter ต้องระบุ READONLY
     @Note         nvarchar(300) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
-    SET XACT_ABORT ON;
+    SET XACT_ABORT ON;  -- SET XACT_ABORT ON: เกิด Error ให้ย้อน Transaction ทั้งหมด
     DECLARE @BookingID int, @PetClass char(1);
-    DECLARE @Req TABLE (Seq int IDENTITY(1,1), ServiceID int, StaffID int,
+    DECLARE @Req TABLE (Seq int IDENTITY(1,1), ServiceID int, StaffID int,  -- Table Variable: เก็บบริการที่คำนวณเวลาและราคาแล้ว
                         StartTime datetime, EndTime datetime, Price money);
-    BEGIN TRY
-        BEGIN TRANSACTION;
+    BEGIN TRY  -- BEGIN TRY: เมื่อเกิด Error จะไปทำงานที่ BEGIN CATCH
+        BEGIN TRANSACTION;  -- BEGIN TRANSACTION: ทุกขั้นตอนต้องสำเร็จพร้อมกัน
 
         -- 0) ตรวจว่าเป็นสัตว์เลี้ยงของลูกค้าคนนี้
         SELECT @PetClass = WeightClass FROM customer.Pets
         WHERE PetID = @PetID AND CustomerID = @CustomerID AND IsActive = 1;
         IF @PetClass IS NULL
-            RAISERROR(N'ไม่พบสัตว์เลี้ยงนี้ในบัญชีของคุณ', 16, 1);
+            RAISERROR(N'ไม่พบสัตว์เลี้ยงนี้ในบัญชีของคุณ', 16, 1);  -- RAISERROR ระดับ 16 ใน TRY: ไปที่ CATCH ทันที
         IF @RoomID IS NULL AND NOT EXISTS (SELECT 1 FROM @Services)
             RAISERROR(N'ต้องเลือกห้องพักหรือบริการอาบน้ำตัดขนอย่างน้อย 1 อย่าง', 16, 1);
 
@@ -376,17 +376,17 @@ BEGIN
                                      WHERE st.StaffID = q.StaffID AND st.Role = 'Groomer' AND st.IsActive = 1))
             RAISERROR(N'ช่างที่เลือกไม่ถูกต้อง', 16, 1);
         IF EXISTS (SELECT 1 FROM @Req a JOIN @Req b
-                   ON a.Seq < b.Seq AND a.StartTime < b.EndTime AND a.EndTime > b.StartTime)
+                   ON a.Seq < b.Seq AND a.StartTime < b.EndTime AND a.EndTime > b.StartTime)  -- สูตรช่วงเวลาทับกัน: บริการในการจองเดียวกันต้องไม่ชนกัน
             RAISERROR(N'บริการของน้องเวลาทับกันเอง', 16, 1);
         IF EXISTS (SELECT 1 FROM @Req q
                    JOIN booking.Booking_Grooming g
                         ON g.StaffID = q.StaffID AND g.Status <> 'Cancelled'
-                       AND g.StartTime < q.EndTime AND g.EndTime > q.StartTime)
+                       AND g.StartTime < q.EndTime AND g.EndTime > q.StartTime)  -- สูตรช่วงเวลาทับกัน: เทียบกับคิวที่มีอยู่ของช่าง
             RAISERROR(N'ช่างที่เลือกมีคิวชนในช่วงเวลานั้นแล้ว', 16, 1);
 
         -- 3) บันทึกการจอง
-        INSERT INTO booking.Bookings (PetID, Note) VALUES (@PetID, @Note);
-        SET @BookingID = SCOPE_IDENTITY();
+        INSERT INTO booking.Bookings (PetID, Note) VALUES (@PetID, @Note);  -- BookingNo, BookingDate และ Status ได้ค่าจาก Default
+        SET @BookingID = SCOPE_IDENTITY();  -- SCOPE_IDENTITY(): รหัสการจองที่เพิ่งสร้าง
 
         IF @RoomID IS NOT NULL
             INSERT INTO booking.Booking_Rooms (BookingID, RoomID, CheckInDate, CheckOutDate, PricePerNight)
@@ -403,7 +403,7 @@ BEGIN
 
         -- 4) คำนวณราคาสุทธิ
         UPDATE booking.Bookings
-        SET TotalPrice = booking.fn_CalculateTotalPrice(@BookingID)
+        SET TotalPrice = booking.fn_CalculateTotalPrice(@BookingID)  -- คำนวณราคาสุทธิด้วย Function 2
         WHERE BookingID = @BookingID;
 
         -- แจ้งเตือนช่าง (Phase 3 จะเปลี่ยนเป็นส่งผ่าน Service Broker)
@@ -411,47 +411,47 @@ BEGIN
         SELECT q.StaffID, @BookingID, N'คิวใหม่: ' + s.ServiceName + N' เวลา ' + FORMAT(q.StartTime, 'dd/MM HH:mm')
         FROM @Req q JOIN grooming.Services s ON s.ServiceID = q.ServiceID;
 
-        COMMIT TRANSACTION;
+        COMMIT TRANSACTION;  -- COMMIT TRANSACTION: บันทึกถาวรเมื่อสำเร็จครบทุกขั้นตอน
         SELECT BookingID, BookingNo, TotalPrice FROM booking.Bookings WHERE BookingID = @BookingID;
     END TRY
-    BEGIN CATCH
-        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        THROW;
+    BEGIN CATCH  -- BEGIN CATCH: จัดการ Error ที่เกิดใน TRY
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;  -- @@TRANCOUNT > 0: ย้อนกลับเมื่อยังมี Transaction ค้างอยู่
+        THROW;  -- THROW: ส่ง Error เดิมกลับไปให้ผู้เรียก
     END CATCH
 END
 GO
 
 -- ยกเลิกการจอง (ลูกค้าส่ง @CustomerID มาด้วย / Admin ส่ง NULL)
-CREATE OR ALTER PROCEDURE booking.sp_CancelBooking @BookingID int, @CustomerID int = NULL
+CREATE OR ALTER PROCEDURE booking.sp_CancelBooking @BookingID int, @CustomerID int = NULL  -- Stored Procedure (Programmability > Stored Procedures)
 AS
 BEGIN
     SET NOCOUNT ON;
     IF NOT EXISTS (SELECT 1 FROM booking.vw_BookingSummary
                    WHERE BookingID = @BookingID AND Status = 'Confirmed'
                      AND (@CustomerID IS NULL OR CustomerID = @CustomerID))
-    BEGIN RAISERROR(N'ยกเลิกไม่ได้ (ไม่พบการจอง หรือเช็กอินไปแล้ว)', 16, 1); RETURN; END
+    BEGIN RAISERROR(N'ยกเลิกไม่ได้ (ไม่พบการจอง หรือเช็กอินไปแล้ว)', 16, 1); RETURN; END  -- RAISERROR แล้ว RETURN: หยุดเมื่อยกเลิกการจองนี้ไม่ได้
 
-    BEGIN TRANSACTION;
+    BEGIN TRANSACTION;  -- BEGIN TRANSACTION: ยกเลิกคิวและการจองพร้อมกัน
         UPDATE booking.Booking_Grooming SET Status = 'Cancelled' WHERE BookingID = @BookingID;
         UPDATE booking.Bookings SET Status = 'Cancelled' WHERE BookingID = @BookingID;
-    COMMIT TRANSACTION;
+    COMMIT TRANSACTION;  -- COMMIT TRANSACTION: ยืนยันการแก้ไขทั้งสองตาราง
 END
 GO
 
 -- Admin: เช็กอิน (ถ้ามีห้อง Trigger จะเปลี่ยนห้องเป็น Occupied ให้เอง)
-CREATE OR ALTER PROCEDURE booking.sp_CheckIn @BookingID int
+CREATE OR ALTER PROCEDURE booking.sp_CheckIn @BookingID int  -- Stored Procedure (Programmability > Stored Procedures)
 AS
 BEGIN
     SET NOCOUNT ON;
     IF NOT EXISTS (SELECT 1 FROM booking.Bookings WHERE BookingID = @BookingID AND Status = 'Confirmed')
-    BEGIN RAISERROR(N'เช็กอินไม่ได้ (สถานะการจองไม่ใช่ Confirmed)', 16, 1); RETURN; END
+    BEGIN RAISERROR(N'เช็กอินไม่ได้ (สถานะการจองไม่ใช่ Confirmed)', 16, 1); RETURN; END  -- RAISERROR แล้ว RETURN: หยุดเมื่อสถานะไม่ใช่ Confirmed
 
     IF EXISTS (SELECT 1 FROM booking.Booking_Rooms WHERE BookingID = @BookingID)
     BEGIN
         IF EXISTS (SELECT 1 FROM booking.Booking_Rooms br JOIN hotel.Rooms r ON r.RoomID = br.RoomID
                    WHERE br.BookingID = @BookingID AND r.Status <> 'Available')
-        BEGIN RAISERROR(N'ห้องยังไม่พร้อม (มีน้องพักอยู่ หรือรอทำความสะอาด)', 16, 1); RETURN; END
-        UPDATE booking.Booking_Rooms SET ActualCheckIn = GETDATE() WHERE BookingID = @BookingID;
+        BEGIN RAISERROR(N'ห้องยังไม่พร้อม (มีน้องพักอยู่ หรือรอทำความสะอาด)', 16, 1); RETURN; END  -- RAISERROR แล้ว RETURN: หยุดเมื่อห้องยังไม่พร้อม
+        UPDATE booking.Booking_Rooms SET ActualCheckIn = GETDATE() WHERE BookingID = @BookingID;  -- การแก้คอลัมน์นี้ทำให้ trg_BookingRooms_Status ทำงาน
     END
     ELSE
         UPDATE booking.Bookings SET Status = 'CheckedIn' WHERE BookingID = @BookingID;
@@ -459,33 +459,33 @@ END
 GO
 
 -- Admin: เช็กเอาต์ (ถ้ามีห้อง Trigger จะเปลี่ยนห้องเป็น Cleaning ให้เอง)
-CREATE OR ALTER PROCEDURE booking.sp_CheckOut @BookingID int
+CREATE OR ALTER PROCEDURE booking.sp_CheckOut @BookingID int  -- Stored Procedure (Programmability > Stored Procedures)
 AS
 BEGIN
     SET NOCOUNT ON;
     IF NOT EXISTS (SELECT 1 FROM booking.Bookings WHERE BookingID = @BookingID AND Status = 'CheckedIn')
-    BEGIN RAISERROR(N'เช็กเอาต์ไม่ได้ (น้องยังไม่ได้เช็กอิน)', 16, 1); RETURN; END
+    BEGIN RAISERROR(N'เช็กเอาต์ไม่ได้ (น้องยังไม่ได้เช็กอิน)', 16, 1); RETURN; END  -- RAISERROR แล้ว RETURN: หยุดเมื่อยังไม่ได้เช็กอิน
 
     IF EXISTS (SELECT 1 FROM booking.Booking_Rooms WHERE BookingID = @BookingID)
-        UPDATE booking.Booking_Rooms SET ActualCheckOut = GETDATE() WHERE BookingID = @BookingID;
+        UPDATE booking.Booking_Rooms SET ActualCheckOut = GETDATE() WHERE BookingID = @BookingID;  -- การแก้คอลัมน์นี้ทำให้ trg_BookingRooms_Status ทำงาน
     ELSE
         UPDATE booking.Bookings SET Status = 'Completed' WHERE BookingID = @BookingID;
 END
 GO
 
 -- Admin: ทำความสะอาดห้องเสร็จ
-CREATE OR ALTER PROCEDURE hotel.sp_MarkRoomCleaned @RoomID int
+CREATE OR ALTER PROCEDURE hotel.sp_MarkRoomCleaned @RoomID int  -- Stored Procedure (Programmability > Stored Procedures)
 AS
 BEGIN
     SET NOCOUNT ON;
     IF NOT EXISTS (SELECT 1 FROM hotel.Rooms WHERE RoomID = @RoomID AND Status = 'Cleaning')
-    BEGIN RAISERROR(N'ห้องนี้ไม่ได้อยู่ในสถานะรอทำความสะอาด', 16, 1); RETURN; END
+    BEGIN RAISERROR(N'ห้องนี้ไม่ได้อยู่ในสถานะรอทำความสะอาด', 16, 1); RETURN; END  -- RAISERROR แล้ว RETURN: หยุดเมื่อห้องไม่ได้รอทำความสะอาด
     UPDATE hotel.Rooms SET Status = 'Available' WHERE RoomID = @RoomID;
 END
 GO
 
 -- Admin/ช่าง: อัปเดตสถานะงานอาบน้ำตัดขน
-CREATE OR ALTER PROCEDURE booking.sp_UpdateGroomingStatus @BookingGroomingID int, @Status varchar(10)
+CREATE OR ALTER PROCEDURE booking.sp_UpdateGroomingStatus @BookingGroomingID int, @Status varchar(10)  -- Stored Procedure (Programmability > Stored Procedures)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -495,19 +495,19 @@ BEGIN
     WHERE g.BookingGroomingID = @BookingGroomingID;
 
     IF @BookingID IS NULL
-    BEGIN RAISERROR(N'ไม่พบคิวนี้', 16, 1); RETURN; END
+    BEGIN RAISERROR(N'ไม่พบคิวนี้', 16, 1); RETURN; END  -- RAISERROR แล้ว RETURN: หยุดเมื่อไม่พบคิว
     IF @Status NOT IN ('Waiting', 'InProgress', 'Done', 'Cancelled')
-    BEGIN RAISERROR(N'สถานะไม่ถูกต้อง', 16, 1); RETURN; END
+    BEGIN RAISERROR(N'สถานะไม่ถูกต้อง', 16, 1); RETURN; END  -- RAISERROR แล้ว RETURN: หยุดเมื่อสถานะไม่ถูกต้อง
     IF @Status IN ('InProgress', 'Done') AND @BookingStatus <> 'CheckedIn'
-    BEGIN RAISERROR(N'ต้องเช็กอินน้องก่อนเริ่มงาน', 16, 1); RETURN; END
+    BEGIN RAISERROR(N'ต้องเช็กอินน้องก่อนเริ่มงาน', 16, 1); RETURN; END  -- RAISERROR แล้ว RETURN: หยุดเมื่อยังไม่ได้เช็กอิน
 
     UPDATE booking.Booking_Grooming SET Status = @Status WHERE BookingGroomingID = @BookingGroomingID;
-    UPDATE booking.Bookings SET TotalPrice = booking.fn_CalculateTotalPrice(@BookingID) WHERE BookingID = @BookingID;
+    UPDATE booking.Bookings SET TotalPrice = booking.fn_CalculateTotalPrice(@BookingID) WHERE BookingID = @BookingID;  -- คำนวณยอดรวมใหม่ โดยไม่นับคิวที่ถูกยกเลิก
 END
 GO
 
 -- Admin: อัปเดตสถานะบริการเสริม (เช่น พาเดินเล่น)
-CREATE OR ALTER PROCEDURE booking.sp_UpdateExtraStatus @BookingID int, @ExtraID int, @Status varchar(10)
+CREATE OR ALTER PROCEDURE booking.sp_UpdateExtraStatus @BookingID int, @ExtraID int, @Status varchar(10)  -- Stored Procedure (Programmability > Stored Procedures)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -517,23 +517,23 @@ BEGIN
     WHERE e.BookingID = @BookingID AND e.ExtraID = @ExtraID;
 
     IF @BookingStatus IS NULL
-    BEGIN RAISERROR(N'ไม่พบบริการเสริมนี้ในการจอง', 16, 1); RETURN; END
+    BEGIN RAISERROR(N'ไม่พบบริการเสริมนี้ในการจอง', 16, 1); RETURN; END  -- RAISERROR แล้ว RETURN: หยุดเมื่อไม่พบบริการเสริม
     IF @Status NOT IN ('Waiting', 'InProgress', 'Done')
-    BEGIN RAISERROR(N'สถานะไม่ถูกต้อง', 16, 1); RETURN; END
+    BEGIN RAISERROR(N'สถานะไม่ถูกต้อง', 16, 1); RETURN; END  -- RAISERROR แล้ว RETURN: หยุดเมื่อสถานะไม่ถูกต้อง
     IF @Status IN ('InProgress', 'Done') AND @BookingStatus <> 'CheckedIn'
-    BEGIN RAISERROR(N'ต้องเช็กอินน้องก่อนเริ่มบริการ', 16, 1); RETURN; END
+    BEGIN RAISERROR(N'ต้องเช็กอินน้องก่อนเริ่มบริการ', 16, 1); RETURN; END  -- RAISERROR แล้ว RETURN: หยุดเมื่อยังไม่ได้เช็กอิน
 
     UPDATE booking.Booking_Extras SET Status = @Status WHERE BookingID = @BookingID AND ExtraID = @ExtraID;
 END
 GO
 
 -- Admin: รับชำระเงิน
-CREATE OR ALTER PROCEDURE booking.sp_AddPayment @BookingID int, @Amount money, @Method varchar(10)
+CREATE OR ALTER PROCEDURE booking.sp_AddPayment @BookingID int, @Amount money, @Method varchar(10)  -- Stored Procedure (Programmability > Stored Procedures)
 AS
 BEGIN
     SET NOCOUNT ON;
     IF NOT EXISTS (SELECT 1 FROM booking.Bookings WHERE BookingID = @BookingID AND Status <> 'Cancelled')
-    BEGIN RAISERROR(N'ไม่พบการจอง หรือการจองถูกยกเลิกแล้ว', 16, 1); RETURN; END
+    BEGIN RAISERROR(N'ไม่พบการจอง หรือการจองถูกยกเลิกแล้ว', 16, 1); RETURN; END  -- RAISERROR แล้ว RETURN: หยุดเมื่อไม่พบการจองที่ชำระได้
     INSERT INTO booking.Payments (BookingID, Amount, Method) VALUES (@BookingID, @Amount, @Method);
 END
 GO
